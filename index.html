@@ -1,0 +1,2589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Momo's Play & Learn</title>
+<style>
+  :root{
+    --bg-deep:#180F33;
+    --bg-deep2:#331B66;
+    --panel:#241452;
+    --panel-edge:#3D2378;
+    --cream:#FFF8ED;
+    --coral:#FF6B5B;
+    --yellow:#FFC93C;
+    --mint:#3DDC97;
+    --sky:#4FB0FF;
+    --dim:#B9AEE0;
+    --font-display:'Baloo 2','Segoe UI Rounded','SF Pro Rounded',-apple-system,'Arial Rounded MT Bold',sans-serif;
+    --font-body:-apple-system,'Segoe UI','Helvetica Neue',Arial,sans-serif;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; touch-action:manipulation;}
+  html,body{
+    width:100%; height:100%; overflow:hidden;
+    background:radial-gradient(ellipse at 50% -10%, var(--bg-deep2), var(--bg-deep) 65%);
+    font-family:var(--font-body);
+    color:var(--cream);
+  }
+  #stars{position:fixed; inset:0; z-index:0; pointer-events:none;}
+  .twinkle{
+    position:absolute; width:3px; height:3px; background:var(--cream);
+    border-radius:50%; opacity:.5; animation:twinkle 3s ease-in-out infinite;
+  }
+  @keyframes twinkle{0%,100%{opacity:.15;} 50%{opacity:.8;}}
+  @keyframes drift{0%{transform:translateY(0);} 100%{transform:translateY(-14px);}}
+
+  #game{position:relative; z-index:1; width:100vw; height:100vh; display:flex; align-items:flex-start; justify-content:center; overflow-y:auto; padding:3vh 0;}
+  .screen{display:none; width:min(1400px, 92vw); flex-direction:column; align-items:center; gap:clamp(.8rem,2vh,1.6rem);}
+  .screen.active{display:flex;}
+
+  h1,h2,h3{font-family:var(--font-display); font-weight:600;}
+  .eyebrow{
+    font-family:var(--font-body); font-weight:800; letter-spacing:.14em; text-transform:uppercase;
+    font-size:clamp(.8rem,1.1vw,1.05rem); color:var(--dim);
+  }
+
+  /* ---------- HOME ---------- */
+  #screen-home h1{font-size:clamp(2.6rem,6vw,4.6rem); text-align:center;}
+  #screen-home .sub{color:var(--dim); font-size:clamp(1rem,1.6vw,1.4rem); text-align:center; margin-top:.2rem;}
+  .tiles{display:flex; gap:clamp(1rem,2.6vw,2.4rem); margin-top:1rem; flex-wrap:wrap; justify-content:center;}
+  .tile{
+    width:clamp(200px,22vw,300px); padding:clamp(1.4rem,2.2vw,2.2rem) 1.2rem;
+    border-radius:32px; text-align:center; cursor:pointer; border:3px solid transparent;
+    background:linear-gradient(160deg, var(--panel), var(--panel-edge));
+    box-shadow:0 10px 0 rgba(0,0,0,.25);
+    transition:transform .15s ease, box-shadow .15s ease, border-color .15s ease;
+  }
+  .tile .icon{font-size:clamp(2.6rem,5vw,4.6rem); display:block; margin-bottom:.4rem;}
+  .tile h2{font-size:clamp(1.3rem,2.1vw,1.9rem);}
+  .tile p{color:var(--dim); font-size:clamp(.8rem,1.1vw,1rem); margin-top:.3rem;}
+  .tile .tag{margin-top:.5rem; font-size:.78em; color:var(--yellow); font-family:var(--font-display);}
+  .tile.focused{transform:translateY(-8px) scale(1.05); border-color:var(--yellow); box-shadow:0 16px 0 rgba(0,0,0,.3), 0 0 34px rgba(255,201,60,.55);}
+  .hint{color:var(--dim); font-size:clamp(.85rem,1.1vw,1.05rem); margin-top:.6rem; display:flex; gap:.5rem; align-items:center;}
+  .key{background:var(--panel-edge); border-radius:8px; padding:.15rem .55rem; font-family:var(--font-display); font-size:.9em;}
+
+  /* ---------- MOMO MASCOT ---------- */
+  .momo-wrap{position:absolute; right:clamp(6px,2vw,40px); bottom:clamp(6px,3vh,40px); z-index:2; display:flex; align-items:flex-end; gap:.6rem; pointer-events:none;}
+  .bubble{
+    background:var(--cream); color:var(--bg-deep); font-family:var(--font-display); font-weight:600;
+    font-size:clamp(.85rem,1.2vw,1.15rem); padding:.6rem 1rem; border-radius:18px; max-width:230px;
+    box-shadow:0 6px 0 rgba(0,0,0,.2); opacity:0; transform:translateY(6px) scale(.9); transition:all .25s ease;
+  }
+  .bubble.show{opacity:1; transform:translateY(0) scale(1);}
+  .momo{width:clamp(52px,5.4vw,84px); height:clamp(52px,5.4vw,84px); position:relative; animation:bob 2.6s ease-in-out infinite;}
+  @keyframes bob{0%,100%{transform:translateY(0) rotate(-2deg);} 50%{transform:translateY(-8px) rotate(2deg);}}
+  .momo .body{position:absolute; inset:0; background:radial-gradient(circle at 34% 30%, #B79CFF, #7C56E8 70%); border-radius:50%; box-shadow:0 8px 0 rgba(0,0,0,.25);}
+  .momo .cheek{position:absolute; width:16%; height:10%; background:var(--coral); border-radius:50%; opacity:.65; top:56%;}
+  .momo .cheek.l{left:12%;} .momo .cheek.r{right:12%;}
+  .momo .eye{position:absolute; width:12%; height:12%; background:var(--bg-deep); border-radius:50%; top:38%;}
+  .momo .eye.l{left:28%;} .momo .eye.r{right:28%;}
+  .momo.happy{animation:jump .5s ease;}
+  @keyframes jump{0%{transform:translateY(0) scale(1);} 40%{transform:translateY(-26px) scale(1.08,.92);} 100%{transform:translateY(0) scale(1);}}
+  .momo.oops{animation:shake .5s ease;}
+  @keyframes shake{0%,100%{transform:translateX(0) rotate(0);} 25%{transform:translateX(-6px) rotate(-4deg);} 75%{transform:translateX(6px) rotate(4deg);}}
+
+  /* ---------- AVATARS ---------- */
+  .avatar-img,.avatar-emoji{border-radius:50%; display:flex; align-items:center; justify-content:center; background:linear-gradient(160deg,var(--panel),var(--panel-edge)); overflow:hidden;}
+  .avatar-img{object-fit:cover;}
+  .avatar-sm{width:38px;height:38px;font-size:20px;}
+  .avatar-md{width:60px;height:60px;font-size:32px;}
+  .avatar-lg{width:92px;height:92px;font-size:50px;}
+  .avatar-xl{width:130px;height:130px;font-size:72px;}
+
+  /* ---------- SETUP / READY ---------- */
+  .setup-columns{display:flex; gap:clamp(1.2rem,3vw,3rem); flex-wrap:wrap; justify-content:center; width:100%;}
+  .player-col{background:linear-gradient(160deg,var(--panel),var(--panel-edge)); border-radius:28px; padding:1.2rem; width:min(340px,42vw); text-align:center;}
+  .avatar-preview{margin:0 auto .5rem;}
+  .avatar-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:.5rem; margin:.7rem 0;}
+  .avatar-option{width:100%; aspect-ratio:1; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:1.6rem; background:rgba(255,255,255,.06); border:3px solid transparent; cursor:pointer;}
+  .avatar-option.selected{border-color:var(--mint); background:rgba(61,220,151,.18);}
+  .avatar-option.focused{border-color:var(--sky); box-shadow:0 0 20px rgba(79,176,255,.5); transform:scale(1.08);}
+  .upload-btn{margin-top:.5rem; width:100%; font-family:var(--font-display); font-size:.95rem; padding:.65rem; border-radius:16px; background:rgba(255,255,255,.08); border:3px solid transparent; color:var(--cream); cursor:pointer;}
+  .upload-btn.focused{border-color:var(--sky); box-shadow:0 0 20px rgba(79,176,255,.5);}
+
+  .ready-avatars{display:flex; align-items:center; gap:clamp(1.4rem,3.6vw,3rem); margin:.6rem 0;}
+  .ready-col{display:flex; flex-direction:column; align-items:center; gap:.5rem; font-family:var(--font-display); font-size:1.05rem;}
+  .vs{font-family:var(--font-display); font-size:clamp(1.3rem,2.2vw,1.9rem); color:var(--yellow);}
+
+  /* ---------- HUD / DUEL TRACK ---------- */
+  .hud{width:100%; display:flex; align-items:center; justify-content:space-between; gap:1rem;}
+  .progress{display:flex; gap:.35rem;}
+  .pip{width:clamp(12px,1.4vw,18px); height:clamp(12px,1.4vw,18px); border-radius:50%; background:var(--panel-edge); transition:background .2s;}
+  .pip.done{background:var(--yellow); box-shadow:0 0 10px rgba(255,201,60,.7);}
+  .pip.now{background:var(--sky);}
+
+  .duel-track{width:100%; display:flex; flex-direction:column; gap:.5rem;}
+  .lane{position:relative; height:44px; background:rgba(255,255,255,.06); border-radius:22px;}
+  .lane-avatar{position:absolute; top:2px; left:6%; width:40px; height:40px; transition:left .5s ease;}
+  .lane-score{position:absolute; right:14px; top:50%; transform:translateY(-50%); font-family:var(--font-display); font-weight:700; font-size:1.05rem;}
+
+  /* ---------- MATH / SPELLING ---------- */
+  .prompt-card{
+    background:linear-gradient(160deg, var(--panel), var(--panel-edge)); border-radius:34px;
+    padding:clamp(1.4rem,2.6vw,2.6rem) clamp(1.4rem,3.6vw,3.6rem); text-align:center; width:100%;
+    box-shadow:0 10px 0 rgba(0,0,0,.25);
+  }
+  .equation{font-family:var(--font-display); font-size:clamp(2.2rem,6vw,4.6rem); letter-spacing:.02em;}
+  .choices{display:grid; grid-template-columns:1fr 1fr; gap:clamp(.7rem,1.4vw,1.2rem); margin-top:clamp(1rem,2vh,1.6rem); width:100%;}
+  .choice-btn{
+    font-family:var(--font-display); font-size:clamp(1.4rem,2.6vw,2.3rem); padding:clamp(.8rem,1.4vw,1.2rem);
+    border-radius:22px; background:rgba(255,255,255,.06); border:3px solid transparent; cursor:pointer; color:var(--cream);
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .choice-btn.focused{transform:scale(1.06); border-color:var(--sky); background:rgba(79,176,255,.18); box-shadow:0 0 26px rgba(79,176,255,.5);}
+  .choice-btn.correct{background:rgba(61,220,151,.3); border-color:var(--mint);}
+  .choice-btn.wrong{background:rgba(255,107,91,.3); border-color:var(--coral);}
+
+  .word-emoji{font-size:clamp(2.8rem,6vw,5.6rem);}
+  .word-slots{display:flex; gap:.6rem; justify-content:center; margin-top:.5rem; flex-wrap:wrap;}
+  .slot{
+    font-family:var(--font-display); font-size:clamp(1.8rem,3.8vw,3.2rem); width:clamp(2.4rem,4.4vw,3.8rem); height:clamp(2.7rem,5vw,4.3rem);
+    display:flex; align-items:center; justify-content:center; border-radius:16px; background:rgba(255,255,255,.06);
+    border-bottom:5px solid var(--panel-edge);
+  }
+  .slot.blank{color:var(--yellow);}
+  .letters{display:flex; gap:clamp(.5rem,1.2vw,1rem); margin-top:clamp(1rem,2vh,1.6rem); flex-wrap:wrap; justify-content:center;}
+  .letter-btn{
+    font-family:var(--font-display); font-size:clamp(1.4rem,2.6vw,2.3rem); width:clamp(3rem,5.4vw,4.4rem); height:clamp(3rem,5.4vw,4.4rem);
+    border-radius:18px; background:rgba(255,255,255,.06); border:3px solid transparent; cursor:pointer; color:var(--cream);
+    transition:transform .12s ease, border-color .12s ease, background .12s ease;
+  }
+  .letter-btn.focused{transform:scale(1.1); border-color:var(--sky); background:rgba(79,176,255,.18); box-shadow:0 0 26px rgba(79,176,255,.5);}
+  .letter-btn.correct{background:rgba(61,220,151,.3); border-color:var(--mint);}
+  .letter-btn.wrong{background:rgba(255,107,91,.3); border-color:var(--coral);}
+
+  /* ---------- TURN BANNER ---------- */
+  .turn-banner{position:fixed; inset:0; background:rgba(24,15,51,.92); display:flex; flex-direction:column; align-items:center; justify-content:center; gap:.8rem; z-index:40; opacity:0; pointer-events:none; transition:opacity .25s;}
+  .turn-banner.show{opacity:1; pointer-events:auto;}
+  .turn-banner h2{font-size:clamp(1.8rem,4.2vw,3rem);}
+
+  /* ---------- RESULTS ---------- */
+  .results-avatars{display:flex; align-items:center; gap:clamp(1.4rem,3.6vw,3rem);}
+  .result-col{display:flex; flex-direction:column; align-items:center; gap:.4rem; font-family:var(--font-display); font-size:1.05rem; position:relative; padding-top:1.6rem;}
+  .crown{position:absolute; top:-4px; font-size:2rem; visibility:hidden;}
+  #screen-results h1{font-size:clamp(2rem,4.6vw,3.4rem); text-align:center;}
+
+  .actions{display:flex; gap:1rem; margin-top:.4rem; flex-wrap:wrap; justify-content:center;}
+  .action-btn{
+    font-family:var(--font-display); font-size:clamp(1.05rem,1.5vw,1.35rem); padding:clamp(.75rem,1.3vw,1.05rem) clamp(1.5rem,2.4vw,2.2rem);
+    border-radius:20px; border:3px solid transparent; cursor:pointer; color:var(--bg-deep); background:var(--yellow);
+    box-shadow:0 8px 0 rgba(0,0,0,.25); transition:transform .12s ease, border-color .12s ease;
+  }
+  .action-btn.secondary{background:transparent; color:var(--cream); border-color:var(--panel-edge);}
+  .action-btn.focused{transform:translateY(-4px) scale(1.06); border-color:var(--sky); box-shadow:0 12px 0 rgba(0,0,0,.25), 0 0 24px rgba(79,176,255,.5);}
+
+  .confetti-piece{position:fixed; top:-20px; z-index:5; border-radius:2px; pointer-events:none; animation:fall linear forwards;}
+  @keyframes fall{to{transform:translateY(110vh) rotate(360deg); opacity:.2;}}
+
+  .back-btn{position:absolute; top:clamp(10px,2vh,26px); left:clamp(10px,2vw,26px); z-index:3;
+    font-family:var(--font-display); font-size:clamp(.9rem,1.2vw,1.1rem); padding:.5rem 1rem; border-radius:14px;
+    background:rgba(255,255,255,.06); border:3px solid transparent; color:var(--dim); cursor:pointer;}
+  .back-btn.focused{border-color:var(--sky); color:var(--cream);}
+
+  /* ---------- RACING ---------- */
+  #screen-racing{width:100vw; height:100vh; padding:0; position:relative; display:none;}
+  #screen-racing.active{display:block;}
+  #screen-racing.shake{animation:shakeScreen .4s ease;}
+  @keyframes shakeScreen{0%,100%{transform:translateX(0);}20%{transform:translateX(-5px);}40%{transform:translateX(5px);}60%{transform:translateX(-3px);}80%{transform:translateX(3px);}}
+  #raceCanvas{width:100%; height:100%; display:block;}
+  .race-hud{position:absolute; top:16px; left:16px; right:16px; display:flex; justify-content:space-between; align-items:center; z-index:3;}
+  .coin-counter{background:rgba(24,15,51,.6); padding:.5rem 1.1rem; border-radius:18px; font-family:var(--font-display); font-size:clamp(1rem,1.8vw,1.4rem);}
+  .pause-btn{background:rgba(24,15,51,.6); border:3px solid transparent; color:var(--cream); font-size:1.4rem; padding:.4rem .9rem; border-radius:14px; cursor:pointer;}
+  .pause-btn.focused{border-color:var(--sky);}
+  .pause-overlay,.countdown-overlay{position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem; background:rgba(24,15,51,.85); opacity:0; pointer-events:none; transition:opacity .2s; z-index:5;}
+  .pause-overlay.show,.countdown-overlay.show{opacity:1; pointer-events:auto;}
+  .countdown-overlay span{font-family:var(--font-display); font-size:6rem; color:var(--yellow);}
+  .countdown-greet{font-family:var(--font-display); font-size:clamp(1.3rem,3vw,2.1rem); color:var(--cream);}
+  .race-toast{position:absolute; top:78px; left:50%; transform:translateX(-50%) translateY(-8px); background:rgba(24,15,51,.75); padding:.5rem 1.1rem; border-radius:16px; font-family:var(--font-display); font-size:clamp(.95rem,1.6vw,1.25rem); opacity:0; transition:all .25s ease; z-index:4; white-space:nowrap;}
+  .race-toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  /* ---------- QUIZ (RAMAYANA) ---------- */
+  .quiz-question{font-family:var(--font-display); font-size:clamp(1.25rem,2.6vw,2.1rem); line-height:1.35; max-width:820px; margin:0 auto;}
+  .single-stars{font-family:var(--font-display); font-size:clamp(1rem,1.6vw,1.4rem); display:flex; align-items:center; gap:.35rem;}
+  #screen-quizdone .big-stars{font-size:clamp(2rem,4.6vw,3.6rem); text-align:center; letter-spacing:.05em;}
+  #screen-quizdone h1{font-size:clamp(2rem,4.6vw,3.2rem); text-align:center;}
+
+  /* ---------- TRIVIA PURSUIT (QUEST) ---------- */
+  .break-icon{font-size:clamp(4rem,10vw,7rem); animation:bob 1.2s ease-in-out infinite; text-align:center;}
+  #screen-quest-break h1{font-size:clamp(2rem,4.6vw,3.2rem); text-align:center;}
+  #break-countdown{font-family:var(--font-display); font-size:clamp(1.8rem,4vw,3rem); color:var(--yellow);}
+  #screen-quest-stagedone h1{font-size:clamp(2rem,4.6vw,3.2rem); text-align:center;}
+  #screen-quest-stagedone .big-stars{font-size:clamp(2rem,4.6vw,3.6rem); text-align:center; letter-spacing:.05em;}
+  #screen-quest-final .big-stars{font-size:clamp(3rem,7vw,5rem); text-align:center;}
+  #screen-quest-final h1{font-size:clamp(2rem,4.6vw,3.4rem); text-align:center;}
+
+  /* ---------- QUESTION COUNT PICKER ---------- */
+  .count-grid{display:flex; gap:clamp(1rem,2.4vw,2rem); flex-wrap:wrap; justify-content:center; margin-top:1rem;}
+  .count-btn{width:clamp(90px,11vw,130px); height:clamp(90px,11vw,130px); border-radius:28px; display:flex; align-items:center; justify-content:center; font-family:var(--font-display); font-size:clamp(1.6rem,3vw,2.4rem); background:linear-gradient(160deg,var(--panel),var(--panel-edge)); border:3px solid transparent; cursor:pointer; color:var(--cream);}
+  .count-btn.focused{transform:scale(1.08); border-color:var(--sky); box-shadow:0 0 26px rgba(79,176,255,.5);}
+
+  /* ---------- HOME SECTIONS ---------- */
+  .section-block{width:100%; margin-top:.6rem;}
+  .section-title{font-size:clamp(1.05rem,1.7vw,1.4rem); color:var(--dim); margin-bottom:.6rem; text-align:center; letter-spacing:.03em; font-family:var(--font-display);}
+
+  /* ---------- LEADERBOARD (GENERIC RESULTS) ---------- */
+  .leaderboard{width:100%; max-width:560px; display:flex; flex-direction:column; gap:.6rem;}
+  .lb-row{display:flex; align-items:center; gap:1rem; background:linear-gradient(160deg,var(--panel),var(--panel-edge)); border-radius:20px; padding:.6rem 1.2rem; box-shadow:0 6px 0 rgba(0,0,0,.2);}
+  .lb-avatar{flex-shrink:0;}
+  .lb-name{flex:1; font-family:var(--font-display); font-size:clamp(1rem,1.6vw,1.2rem); text-align:left;}
+  .lb-score{font-family:var(--font-display); font-weight:700; color:var(--yellow); font-size:clamp(1rem,1.6vw,1.2rem);}
+
+  /* ---------- FLAG MATCH ---------- */
+  .flag-display{display:flex; justify-content:center; margin-bottom:.8rem;}
+  .flag-display svg{border-radius:8px; box-shadow:0 4px 12px rgba(0,0,0,.35); border:2px solid rgba(255,255,255,.15); display:block;}
+
+  /* ---------- BIG VS SMALL ---------- */
+  .bigsmall-btn{display:flex; align-items:center; justify-content:center; min-height:150px;}
+
+  /* ---------- PATTERN PLAY ---------- */
+  .pattern-seq{font-family:var(--font-display); font-size:clamp(2.2rem,5vw,3.6rem); text-align:center; letter-spacing:.25em;}
+
+  /* ---------- MEMORY MATCH ---------- */
+  .memory-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(.6rem,1.4vw,1rem); max-width:600px; width:100%; margin:0 auto;}
+  .memory-card{aspect-ratio:1; border-radius:16px; background:linear-gradient(160deg,var(--panel),var(--panel-edge)); border:3px solid transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; padding:.4rem;}
+  .memory-card.flipped{background:rgba(255,255,255,.12);}
+  .memory-card.matched{opacity:.5; cursor:default;}
+  .memory-back{font-family:var(--font-display); font-size:2rem; color:var(--dim);}
+  .memory-card.focused{border-color:var(--sky); box-shadow:0 0 20px rgba(79,176,255,.5);}
+
+
+  /* ---------- MOBILE CONTROLS ---------- */
+  .race-controls{position:absolute; bottom:20px; left:0; right:0; display:flex; justify-content:space-between; padding:0 24px; z-index:6; pointer-events:none;}
+  .race-ctrl-btn{pointer-events:auto; width:clamp(100px,20vw,160px); height:clamp(100px,20vw,160px); border-radius:50%; background:rgba(24,15,51,.55); border:3px solid rgba(255,255,255,.25); color:var(--cream); font-size:clamp(2.2rem,5.5vw,3.4rem); display:flex; align-items:center; justify-content:center; -webkit-tap-highlight-color:transparent; user-select:none; cursor:pointer; touch-action:manipulation;}
+  .race-ctrl-btn:active{background:rgba(79,176,255,.4); transform:scale(0.94);}
+
+  /* ---------- CAR MATCH (SHAYAN) ---------- */
+  .carmatch-prompt{display:flex; align-items:center; justify-content:center; gap:.6rem; min-height:100px; margin-bottom:.2rem; flex-wrap:wrap;}
+  .carmatch-btn{padding:1rem !important;}
+  #screen-carmatchdone .big-stars{font-size:clamp(2rem,4.6vw,3.6rem); text-align:center; letter-spacing:.05em;}
+  #screen-carmatchdone h1{font-size:clamp(2rem,4.6vw,3.2rem); text-align:center;}
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.001ms !important; animation-iteration-count:1 !important;}
+  }
+</style>
+</head>
+<body>
+
+<div id="stars"></div>
+
+<div id="game">
+
+    <!-- HOME -->
+  <div class="screen active" id="screen-home">
+    <span class="eyebrow">Momo's</span>
+    <h1>Play &amp; Learn</h1>
+    <p class="sub">Pick a game to start your adventure</p>
+
+    <div class="section-block">
+      <h2 class="section-title">🎮 Quiz Battles · 1-4 Players</h2>
+      <div class="tiles">
+        <div class="tile focusable" data-action="go-math">
+          <span class="icon">🔢</span>
+          <h2>Math Quest</h2>
+          <p>Solve fun number puzzles</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-spelling">
+          <span class="icon">🔤</span>
+          <h2>Word Wizard</h2>
+          <p>Complete the missing letter</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-ramayana">
+          <span class="icon">🏹</span>
+          <h2>Ramayana Quiz</h2>
+          <p>How well do you know the story of Rama?</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-henry8">
+          <span class="icon">👑</span>
+          <h2>Henry VIII Quiz</h2>
+          <p>Test your Tudor history knowledge!</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-book-select">
+          <span class="icon">📚</span>
+          <h2>Book Quiz</h2>
+          <p>How well do you remember the story?</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-flags">
+          <span class="icon">🌍</span>
+          <h2>Flag Match</h2>
+          <p>Can you name the flag?</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-timestables">
+          <span class="icon">✖️</span>
+          <h2>Times Tables</h2>
+          <p>Practice your multiplication</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-scramble">
+          <span class="icon">🔀</span>
+          <h2>Word Scramble</h2>
+          <p>Unscramble the letters</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+        <div class="tile focusable" data-action="go-animalfacts">
+          <span class="icon">🦓</span>
+          <h2>Animal Facts Quiz</h2>
+          <p>How much do you know about animals?</p>
+          <p class="tag">🎮 1-4 Players</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2 class="section-title">🗺️ Adventures</h2>
+      <div class="tiles">
+        <div class="tile focusable" data-action="go-quest">
+          <span class="icon">🗺️</span>
+          <h2>Trivia Pursuit</h2>
+          <p>Math, words &amp; Ramayana — one big adventure!</p>
+          <p class="tag">🏆 1 Player</p>
+        </div>
+        <div class="tile focusable" data-action="go-facts-topics">
+          <span class="icon">🌟</span>
+          <h2>Fun Facts</h2>
+          <p>Amazing facts to discover!</p>
+          <p class="tag">🔬 1 Player</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-block">
+      <h2 class="section-title">👦 Shayan's Corner</h2>
+      <div class="tiles">
+        <div class="tile focusable" data-action="go-race">
+          <span class="icon">🏎️</span>
+          <h2>Shayan's Race!</h2>
+          <p>Hop in and zoom down the road</p>
+          <p class="tag">🏎️ Just for Shayan</p>
+        </div>
+        <div class="tile focusable" data-action="go-carmatch">
+          <span class="icon">🚗</span>
+          <h2>Shayan's Car Match</h2>
+          <p>Match colors, shapes &amp; numbers!</p>
+          <p class="tag">🎨 Just for Shayan</p>
+        </div>
+        <div class="tile focusable" data-action="go-animalsound">
+          <span class="icon">🐄</span>
+          <h2>Animal Sounds</h2>
+          <p>Who makes that sound?</p>
+          <p class="tag">🎨 Just for Shayan</p>
+        </div>
+        <div class="tile focusable" data-action="go-memory">
+          <span class="icon">🧠</span>
+          <h2>Memory Match</h2>
+          <p>Find the matching cars!</p>
+          <p class="tag">🎨 Just for Shayan</p>
+        </div>
+        <div class="tile focusable" data-action="go-bigsmall">
+          <span class="icon">📏</span>
+          <h2>Big &amp; Small</h2>
+          <p>Which one is bigger?</p>
+          <p class="tag">🎨 Just for Shayan</p>
+        </div>
+        <div class="tile focusable" data-action="go-pattern">
+          <span class="icon">🔷</span>
+          <h2>Pattern Play</h2>
+          <p>What comes next?</p>
+          <p class="tag">🎨 Just for Shayan</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint"><span class="key">◀ ▶</span> to choose · <span class="key">OK</span> to select</p>
+  </div>
+
+  <!-- PLAYER COUNT -->
+  <div class="screen" id="screen-playercount">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <h1>How Many Players?</h1>
+    <p class="sub" id="playercount-sub">Choose how many players</p>
+    <div class="count-grid" id="playercount-grid"></div>
+  </div>
+
+  <!-- SETUP (dynamic, 1-4 players) -->
+  <div class="screen" id="screen-setup">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <h1>Choose Your Players</h1>
+    <div class="setup-columns" id="setup-columns"></div>
+    <button class="action-btn focusable" data-action="confirm-setup">▶ Let's Play!</button>
+  </div>
+
+  <!-- QUESTION COUNT -->
+  <div class="screen" id="screen-count">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <h1>How Many Questions?</h1>
+    <p class="sub" id="count-sub">Choose how many questions you'd like</p>
+    <div class="count-grid" id="count-grid"></div>
+  </div>
+
+  <!-- GENERIC PLAY -->
+  <div class="screen" id="screen-play">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="play-progress"></div>
+      <span class="eyebrow" id="play-label">Question 1 of 10</span>
+    </div>
+    <div class="single-stars" id="play-single-stars" style="display:none;">⭐ <span id="play-single-score">0</span></div>
+    <div class="duel-track" id="play-duel-track"></div>
+    <div class="prompt-card" id="play-math-card">
+      <div class="equation" id="play-equation">7 + 5 = ?</div>
+      <div class="choices" id="play-math-choices"></div>
+    </div>
+    <div class="prompt-card" id="play-spell-card" style="display:none;">
+      <div class="word-emoji" id="play-spell-emoji">🐱</div>
+      <div class="word-slots" id="play-spell-slots"></div>
+      <div class="letters" id="play-spell-letters"></div>
+    </div>
+    <div class="prompt-card" id="play-trivia-card" style="display:none;">
+      <div class="word-emoji" id="play-trivia-emoji">🏹</div>
+      <div class="quiz-question" id="play-trivia-question">...</div>
+      <div class="choices" id="play-trivia-choices"></div>
+    </div>
+    <div class="prompt-card" id="play-flag-card" style="display:none;">
+      <div class="flag-display" id="play-flag-display"></div>
+      <div class="quiz-question">Which country is this flag from?</div>
+      <div class="choices" id="play-flag-choices"></div>
+    </div>
+  </div>
+
+  <!-- GENERIC RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="big-stars" id="results-emoji">🏆</div>
+    <h1 id="results-title">Wonderful!</h1>
+    <div class="leaderboard" id="leaderboard-list"></div>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="rematch">🔄 Rematch</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+<!-- QUEST PLAY -->
+  <div class="screen" id="screen-quest">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="quest-progress"></div>
+      <span class="eyebrow" id="quest-label">Math Quest · Question 1 of 10</span>
+    </div>
+    <div class="single-stars">⭐ <span id="quest-stars">0</span></div>
+    <div class="prompt-card" id="quest-math-card">
+      <div class="equation" id="quest-equation">7 + 5 = ?</div>
+      <div class="choices" id="quest-math-choices"></div>
+    </div>
+    <div class="prompt-card" id="quest-spell-card" style="display:none;">
+      <div class="word-emoji" id="quest-spell-emoji">🐱</div>
+      <div class="word-slots" id="quest-spell-slots"></div>
+      <div class="letters" id="quest-spell-letters"></div>
+    </div>
+    <div class="prompt-card" id="quest-ram-card" style="display:none;">
+      <div class="word-emoji" id="quest-ram-emoji">🏹</div>
+      <div class="quiz-question" id="quest-ram-question">...</div>
+      <div class="choices" id="quest-ram-choices"></div>
+    </div>
+  </div>
+
+  <!-- QUEST BREAK -->
+  <div class="screen" id="screen-quest-break">
+    <div class="break-icon" id="break-icon">🤸</div>
+    <h1 id="break-title">Time to Move!</h1>
+    <p class="sub" id="break-text">Do 10 jumping jacks!</p>
+    <p class="sub" id="break-countdown">8</p>
+    <button class="action-btn focusable" data-action="quest-continue">▶ Done! Continue</button>
+  </div>
+
+  <!-- QUEST STAGE DONE -->
+  <div class="screen" id="screen-quest-stagedone">
+    <div class="big-stars" id="stagedone-stars">⭐⭐⭐⭐⭐⭐⭐⭐⭐⭐</div>
+    <h1 id="stagedone-title">Math Quest Complete!</h1>
+    <p class="sub" id="stagedone-sub">You got 8 out of 10 stars</p>
+    <p class="sub" id="stagedone-next">Up next: Word Wizard!</p>
+    <button class="action-btn focusable" data-action="quest-next-stage">▶ Continue</button>
+  </div>
+
+  <!-- QUEST FINAL -->
+  <div class="screen" id="screen-quest-final">
+    <div class="big-stars">🏆</div>
+    <h1 id="quest-final-title">Quest Complete!</h1>
+    <p class="sub" id="quest-final-sub">You earned 24 out of 30 stars!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="quest-again">🔄 New Quest</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- CAR MATCH -->
+  <div class="screen" id="screen-carmatch">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="carmatch-progress"></div>
+      <span class="eyebrow" id="carmatch-label">Round 1 of 9</span>
+    </div>
+    <div class="prompt-card">
+      <div class="carmatch-prompt" id="carmatch-prompt-visual"></div>
+      <div class="quiz-question" id="carmatch-prompt-text">Find the red car!</div>
+      <div class="choices" id="carmatch-choices"></div>
+    </div>
+  </div>
+
+  <!-- CAR MATCH COMPLETE -->
+  <div class="screen" id="screen-carmatchdone">
+    <div class="big-stars" id="carmatchdone-stars">⭐⭐⭐⭐⭐⭐⭐⭐⭐</div>
+    <h1 id="carmatchdone-title">Great job, Shayan!</h1>
+    <p class="sub" id="carmatchdone-sub">You matched 8 out of 9!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="carmatch-again">🔄 Play Again</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- FUN FACTS TOPICS -->
+  <div class="screen" id="screen-facts-topics">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <h1>Fun Facts</h1>
+    <p class="sub">Pick a topic to explore!</p>
+    <div class="tiles">
+      <div class="tile focusable" data-action="go-facts" data-topic="science">
+        <span class="icon">🔬</span>
+        <h2>Science</h2>
+      </div>
+      <div class="tile focusable" data-action="go-facts" data-topic="technology">
+        <span class="icon">💻</span>
+        <h2>Technology</h2>
+      </div>
+      <div class="tile focusable" data-action="go-facts" data-topic="geography">
+        <span class="icon">🌍</span>
+        <h2>Geography</h2>
+      </div>
+      <div class="tile focusable" data-action="go-facts" data-topic="animals">
+        <span class="icon">🦁</span>
+        <h2>Animals</h2>
+      </div>
+      <div class="tile focusable" data-action="go-facts" data-topic="space">
+        <span class="icon">🚀</span>
+        <h2>Space</h2>
+      </div>
+      <div class="tile focusable" data-action="go-facts" data-topic="random">
+        <span class="icon">🎲</span>
+        <h2>Surprise Me!</h2>
+      </div>
+    </div>
+  </div>
+
+  <!-- FUN FACTS VIEW -->
+  <div class="screen" id="screen-facts">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="facts-progress"></div>
+      <span class="eyebrow" id="facts-label">Science · Fact 1 of 10</span>
+    </div>
+    <div class="prompt-card">
+      <div class="word-emoji" id="facts-emoji">🔬</div>
+      <div class="quiz-question" id="facts-text">Fact goes here...</div>
+    </div>
+    <div class="actions">
+      <button class="action-btn secondary focusable" data-action="facts-prev">◀ Prev</button>
+      <button class="action-btn focusable" data-action="facts-next">Next ▶</button>
+    </div>
+    <p class="hint"><span class="key">◀ ▶</span> also works</p>
+  </div>
+
+  <!-- FUN FACTS DONE -->
+  <div class="screen" id="screen-factsdone">
+    <div class="big-stars">🌟</div>
+    <h1>Great Learning!</h1>
+    <p class="sub" id="factsdone-sub">You just learned 10 fun facts!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="facts-again">🔄 More Facts</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- BOOK SELECT -->
+  <div class="screen" id="screen-book-select">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <h1>Pick a Book</h1>
+    <p class="sub">Which book would you like to be quizzed on?</p>
+    <div class="tiles" id="book-select-grid"></div>
+  </div>
+
+    <!-- ANIMAL SOUND MATCH -->
+  <div class="screen" id="screen-animalsound">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="animalsound-progress"></div>
+      <span class="eyebrow" id="animalsound-label">Round 1 of 8</span>
+    </div>
+    <div class="prompt-card">
+      <div class="quiz-question" id="animalsound-text">Who says "Moo!"?</div>
+      <div class="choices" id="animalsound-choices"></div>
+    </div>
+  </div>
+
+  <!-- ANIMAL SOUND MATCH COMPLETE -->
+  <div class="screen" id="screen-animalsounddone">
+    <div class="big-stars" id="animalsounddone-stars">⭐⭐⭐⭐⭐⭐⭐⭐</div>
+    <h1 id="animalsounddone-title">Great job, Shayan!</h1>
+    <p class="sub" id="animalsounddone-sub">You matched 8 out of 8!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="animalsound-again">🔄 Play Again</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- BIG VS SMALL -->
+  <div class="screen" id="screen-bigsmall">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="bigsmall-progress"></div>
+      <span class="eyebrow" id="bigsmall-label">Round 1 of 8</span>
+    </div>
+    <div class="prompt-card">
+      <div class="quiz-question" id="bigsmall-text">Tap the BIGGER one!</div>
+      <div class="choices" id="bigsmall-choices"></div>
+    </div>
+  </div>
+
+  <!-- BIG VS SMALL COMPLETE -->
+  <div class="screen" id="screen-bigsmalldone">
+    <div class="big-stars" id="bigsmalldone-stars">⭐⭐⭐⭐⭐⭐⭐⭐</div>
+    <h1 id="bigsmalldone-title">Great job, Shayan!</h1>
+    <p class="sub" id="bigsmalldone-sub">You got 8 out of 8!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="bigsmall-again">🔄 Play Again</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- PATTERN PLAY -->
+  <div class="screen" id="screen-pattern">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <div class="hud">
+      <div class="progress" id="pattern-progress"></div>
+      <span class="eyebrow" id="pattern-label">Round 1 of 8</span>
+    </div>
+    <div class="prompt-card">
+      <div class="pattern-seq" id="pattern-seq">🔴 🔵 🔴 🔵  ?</div>
+      <div class="choices" id="pattern-choices"></div>
+    </div>
+  </div>
+
+  <!-- PATTERN PLAY COMPLETE -->
+  <div class="screen" id="screen-patterndone">
+    <div class="big-stars" id="patterndone-stars">⭐⭐⭐⭐⭐⭐⭐⭐</div>
+    <h1 id="patterndone-title">Great job, Shayan!</h1>
+    <p class="sub" id="patterndone-sub">You found 8 out of 8 patterns!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="pattern-again">🔄 Play Again</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- MEMORY MATCH -->
+  <div class="screen" id="screen-memory">
+    <button class="back-btn focusable" data-action="go-home">⟵ Home</button>
+    <h1>Memory Match</h1>
+    <p class="sub" id="memory-label">Pairs found: 0 of 6</p>
+    <div class="memory-grid" id="memory-grid"></div>
+  </div>
+
+  <!-- MEMORY MATCH COMPLETE -->
+  <div class="screen" id="screen-memorydone">
+    <div class="big-stars">🏆</div>
+    <h1>You Did It, Shayan!</h1>
+    <p class="sub">You matched all the cars!</p>
+    <div class="actions">
+      <button class="action-btn focusable" data-action="memory-again">🔄 Play Again</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+  <!-- RACING -->
+  <div class="screen" id="screen-racing">
+    <canvas id="raceCanvas"></canvas>
+    <div class="race-hud">
+      <div class="coin-counter">🪙 <span id="race-coins">0</span></div>
+      <button class="pause-btn focusable" data-action="pause-race">⏸</button>
+    </div>
+    <div class="countdown-overlay" id="countdownOverlay">
+      <div class="countdown-greet">Hi Shayan! 🏎️</div>
+      <span id="countdownText">3</span>
+    </div>
+    <div class="race-toast" id="raceToast"></div>
+    <div class="race-controls">
+      <button class="race-ctrl-btn" id="raceLeftBtn" aria-label="Steer left">◀</button>
+      <button class="race-ctrl-btn" id="raceRightBtn" aria-label="Steer right">▶</button>
+    </div>
+    <div class="pause-overlay" id="pauseOverlay">
+      <h2>Paused</h2>
+      <button class="action-btn focusable" data-action="resume-race">▶ Resume</button>
+      <button class="action-btn secondary focusable" data-action="go-home">🏠 Home</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="turn-banner" id="turnBanner">
+  <div id="turnBannerAvatar"></div>
+  <h2 id="turnBannerText">Player 1's Turn!</h2>
+  <p class="sub">Get ready...</p>
+</div>
+
+<input type="file" id="avatarFileInput" accept="image/*" capture="user" style="display:none;">
+
+<div class="momo-wrap">
+  <div class="bubble" id="bubble">Let's play!</div>
+  <div class="momo" id="momo">
+    <div class="body"></div>
+    <div class="cheek l"></div><div class="cheek r"></div>
+    <div class="eye l"></div><div class="eye r"></div>
+  </div>
+</div>
+
+<script>
+/* ================= constants & state ================= */
+const ROUND_LEN = 6;
+const PRESET_AVATARS = ['🦊','🐻','🐰','🦁','🐼','🐸','🦄','🐵'];
+const WORD_BANK = [
+  {word:'CAT', emoji:'🐱'},{word:'DOG', emoji:'🐶'},{word:'SUN', emoji:'☀️'},
+  {word:'HAT', emoji:'🎩'},{word:'PIG', emoji:'🐷'},{word:'BUS', emoji:'🚌'},
+  {word:'FISH', emoji:'🐟'},{word:'STAR', emoji:'⭐'},{word:'MOON', emoji:'🌙'},
+  {word:'BOOK', emoji:'📖'},{word:'FROG', emoji:'🐸'},{word:'DUCK', emoji:'🦆'},
+  {word:'APPLE', emoji:'🍎'},{word:'HOUSE', emoji:'🏠'},{word:'TIGER', emoji:'🐯'},
+  {word:'PLANT', emoji:'🌱'},{word:'CLOUD', emoji:'☁️'},{word:'SMILE', emoji:'😊'},
+  {word:'WATER', emoji:'💧'},{word:'HAPPY', emoji:'😄'},{word:'LIGHT', emoji:'💡'},
+  {word:'GRAPE', emoji:'🍇'},{word:'TRAIN', emoji:'🚂'},{word:'BEACH', emoji:'🏖️'}
+];
+
+let players = [];
+let savedPlayers = [];
+try{
+  const saved = JSON.parse(localStorage.getItem('momoPlayersV2')||'null');
+  if(Array.isArray(saved) && saved.length) savedPlayers = saved;
+}catch(e){}
+
+let playerCount = 1;
+let tempPlayers = [];
+let pendingUploadIdx = null;
+let currentGameKey = null;
+let currentBookKey = null;
+let session = {};
+let raceState = null;
+let raceRAF = null;
+let inputLocked = false;
+let factsState = {};
+const questionCounts = {};
+const COUNT_OPTIONS = [5,10,15,20];
+
+
+/* ================= ambient background stars ================= */
+const starsWrap = document.getElementById('stars');
+for(let i=0;i<40;i++){
+  const s = document.createElement('div');
+  s.className='twinkle';
+  s.style.left = Math.random()*100+'vw';
+  s.style.top = Math.random()*100+'vh';
+  s.style.animationDelay = (Math.random()*3)+'s';
+  s.style.animation += `, drift ${6+Math.random()*6}s ease-in-out infinite alternate`;
+  starsWrap.appendChild(s);
+}
+
+/* ================= audio ================= */
+let actx;
+function tone(freq, dur, type='sine', delay=0){
+  try{
+    actx = actx || new (window.AudioContext||window.webkitAudioContext)();
+    const t0 = actx.currentTime + delay;
+    const osc = actx.createOscillator();
+    const gain = actx.createGain();
+    osc.type = type; osc.frequency.setValueAtTime(freq, t0);
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.18, t0+0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+    osc.connect(gain).connect(actx.destination);
+    osc.start(t0); osc.stop(t0+dur+0.02);
+  }catch(e){}
+}
+function playCorrect(){ tone(523.25,.16); tone(659.25,.18,'sine',.12); tone(783.99,.22,'sine',.24); }
+function playWrong(){ tone(220,.28,'triangle'); }
+function playSelect(){ tone(440,.08,'square'); }
+function playStar(){ tone(880,.12,'sine'); tone(1046.5,.16,'sine',.08); }
+
+/* ================= momo mascot ================= */
+const momoEl = document.getElementById('momo');
+const bubbleEl = document.getElementById('bubble');
+function momoSay(msg, mood){
+  bubbleEl.textContent = msg;
+  bubbleEl.classList.add('show');
+  momoEl.classList.remove('happy','oops');
+  if(mood) void momoEl.offsetWidth, momoEl.classList.add(mood);
+  clearTimeout(momoSay._t);
+  momoSay._t = setTimeout(()=>bubbleEl.classList.remove('show'), 2600);
+}
+
+/* ================= confetti ================= */
+function confettiBurst(){
+  const colors = ['#FF6B5B','#FFC93C','#3DDC97','#4FB0FF','#B79CFF'];
+  for(let i=0;i<24;i++){
+    const p = document.createElement('div');
+    p.className='confetti-piece';
+    p.style.left = Math.random()*100+'vw';
+    p.style.width = p.style.height = (6+Math.random()*6)+'px';
+    p.style.background = colors[Math.floor(Math.random()*colors.length)];
+    p.style.animationDuration = (1.4+Math.random()*1.2)+'s';
+    document.body.appendChild(p);
+    setTimeout(()=>p.remove(), 2800);
+  }
+}
+
+/* ================= helpers ================= */
+function pick(arr){ return arr[Math.floor(Math.random()*arr.length)]; }
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
+  return a;
+}
+function renderAvatarHTML(avatar, sizeClass){
+  if(!avatar) avatar = {type:'emoji', value:PRESET_AVATARS[0]};
+  if(avatar.type==='photo') return `<img src="${avatar.value}" class="avatar-img ${sizeClass}">`;
+  return `<div class="avatar-emoji ${sizeClass}">${avatar.value}</div>`;
+}
+function renderProgress(elId, doneCount, total){
+  total = total || ROUND_LEN;
+  const wrap = document.getElementById(elId);
+  wrap.innerHTML = '';
+  for(let i=0;i<total;i++){
+    const p = document.createElement('div');
+    p.className = 'pip' + (i<doneCount?' done':(i===doneCount?' now':''));
+    wrap.appendChild(p);
+  }
+}
+
+/* ================= screen + focus management ================= */
+const screens = ['home','playercount','setup','count','play','results','racing','quest','quest-break','quest-stagedone','quest-final','carmatch','carmatchdone','facts-topics','facts','factsdone','book-select','animalsound','animalsounddone','bigsmall','bigsmalldone','pattern','patterndone','memory','memorydone'];
+let currentScreen = 'home';
+let focusables = [];
+let focusIndex = 0;
+
+function showScreen(name){
+  if(currentScreen==='racing' && name!=='racing' && raceRAF){ cancelAnimationFrame(raceRAF); raceRAF=null; }
+  screens.forEach(s=>document.getElementById('screen-'+s).classList.toggle('active', s===name));
+  currentScreen = name;
+  document.querySelector('.momo-wrap').style.display = (name==='racing') ? 'none':'flex';
+  refreshFocusables();
+}
+function refreshFocusables(){
+  const scope = document.getElementById('screen-'+currentScreen);
+  focusables = Array.from(scope.querySelectorAll('.focusable'));
+  focusIndex = 0;
+  applyFocus();
+}
+function applyFocus(){
+  focusables.forEach((el,i)=>el.classList.toggle('focused', i===focusIndex));
+  if(focusables[focusIndex]) focusables[focusIndex].scrollIntoView({block:'nearest'});
+}
+function moveFocus(delta){
+  if(!focusables.length) return;
+  focusIndex = (focusIndex + delta + focusables.length) % focusables.length;
+  playSelect();
+  applyFocus();
+}
+function activateFocused(){
+  const el = focusables[focusIndex];
+  if(el) el.click();
+}
+
+document.addEventListener('keydown', (e)=>{
+  if(inputLocked){ e.preventDefault(); return; }
+  if(e.key==='Backspace' || e.key==='Escape'){
+    e.preventDefault();
+    if(currentScreen!=='home'){ momoSay("Let's play!"); showScreen('home'); }
+    return;
+  }
+  if(currentScreen==='racing' && raceState && !raceState.paused){
+    if(e.key==='ArrowLeft'){ e.preventDefault(); raceState.targetLane = Math.max(-1, raceState.targetLane-0.5); }
+    else if(e.key==='ArrowRight'){ e.preventDefault(); raceState.targetLane = Math.min(1, raceState.targetLane+0.5); }
+    else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); pauseRace(); }
+    return;
+  }
+  if(currentScreen==='facts'){
+    if(e.key==='ArrowRight'){ e.preventDefault(); nextFact(); return; }
+    if(e.key==='ArrowLeft'){ e.preventDefault(); prevFact(); return; }
+    if(e.key==='Enter'||e.key===' '){ e.preventDefault(); nextFact(); return; }
+  }
+  switch(e.key){
+    case 'ArrowRight': case 'ArrowDown': e.preventDefault(); moveFocus(1); break;
+    case 'ArrowLeft': case 'ArrowUp': e.preventDefault(); moveFocus(-1); break;
+    case 'Enter': case ' ': e.preventDefault(); activateFocused(); break;
+  }
+});
+
+document.getElementById('game').addEventListener('click', (e)=>{
+  if(inputLocked) return;
+  const actionEl = e.target.closest('[data-action]');
+  if(!actionEl) return;
+  handleAction(actionEl);
+});
+
+document.getElementById('game').addEventListener('mouseover', (e)=>{
+  const el = e.target.closest('.focusable');
+  if(!el) return;
+  const idx = focusables.indexOf(el);
+  if(idx>=0){ focusIndex = idx; applyFocus(); }
+});
+
+function handleAction(el){
+  const action = el.dataset.action;
+  if(action==='go-home'){ momoSay("Let's play!"); showScreen('home'); }
+  else if(action==='go-math'){ enterGame('math'); }
+  else if(action==='go-spelling'){ enterGame('spelling'); }
+  else if(action==='go-ramayana'){ enterGame('ramayana'); }
+  else if(action==='go-henry8'){ enterGame('henry8'); }
+  else if(action==='go-flags'){ enterGame('flags'); }
+  else if(action==='go-timestables'){ enterGame('timestables'); }
+  else if(action==='go-scramble'){ enterGame('scramble'); }
+  else if(action==='go-animalfacts'){ enterGame('animalfacts'); }
+  else if(action==='go-book-select'){ showScreen('book-select'); renderBookSelect(); }
+  else if(action==='pick-book'){ currentGameKey='book'; currentBookKey = el.dataset.book; goToPlayerCount(); }
+  else if(action==='pick-playercount'){
+    const n = Number(el.dataset.count);
+    playerCount = n;
+    if(n===1){
+      players = [ savedPlayers[0] ? {avatar:savedPlayers[0].avatar} : {avatar:{type:'emoji', value:PRESET_AVATARS[0]}} ];
+      showCountPicker();
+    }else{
+      tempPlayers = Array.from({length:n}, (_,i)=> savedPlayers[i] ? {avatar:savedPlayers[i].avatar} : {avatar:{type:'emoji', value:PRESET_AVATARS[i%PRESET_AVATARS.length]}});
+      showScreen('setup');
+      renderSetupDynamic();
+    }
+  }
+  else if(action==='select-avatar-n'){
+    const idx = Number(el.dataset.idx), emoji = el.dataset.emoji;
+    tempPlayers[idx].avatar = {type:'emoji', value:emoji};
+    document.getElementById('setup-preview-'+idx).innerHTML = renderAvatarHTML(tempPlayers[idx].avatar, 'avatar-lg');
+    document.querySelectorAll(`#setup-grid-${idx} .avatar-option`).forEach(b=>{
+      b.classList.toggle('selected', b.dataset.emoji===emoji);
+    });
+  }
+  else if(action==='upload-player'){
+    pendingUploadIdx = Number(el.dataset.idx);
+    document.getElementById('avatarFileInput').click();
+  }
+  else if(action==='confirm-setup'){
+    players = tempPlayers.map(p=>({avatar:p.avatar}));
+    try{ localStorage.setItem('momoPlayersV2', JSON.stringify(players)); }catch(e){}
+    showCountPicker();
+  }
+  else if(action==='pick-count'){
+    const n = Number(el.dataset.count);
+    startSession(n);
+  }
+  else if(action==='rematch'){ startSession(session.len); }
+  else if(action==='pause-race'){ pauseRace(); }
+  else if(action==='resume-race'){ resumeRace(); }
+  else if(action==='go-race'){ enterRacing(); }
+  else if(action==='go-quest'){ startQuest(); }
+  else if(action==='quest-next-stage'){
+    const isLast = questState.stageIdx >= questState.stages.length-1;
+    if(isLast) showQuestFinal(); else showActivityBreak();
+  }
+  else if(action==='quest-continue'){
+    if(breakInterval){ clearInterval(breakInterval); breakInterval=null; }
+    questState.stageIdx++;
+    questState.idx = 0;
+    questState.stageStars = 0;
+    showScreen('quest');
+    renderQuestQuestion();
+  }
+  else if(action==='quest-again'){ startQuest(); }
+  else if(action==='go-carmatch'){ startCarMatch(); }
+  else if(action==='carmatch-again'){ startCarMatch(); }
+  else if(action==='go-facts-topics'){ showScreen('facts-topics'); }
+  else if(action==='go-facts'){ startFacts(el.dataset.topic); }
+  else if(action==='facts-prev'){ prevFact(); }
+  else if(action==='facts-next'){ nextFact(); }
+  else if(action==='facts-again'){ showScreen('facts-topics'); }
+  else if(action==='go-animalsound'){ startAnimalSound(); }
+  else if(action==='animalsound-again'){ startAnimalSound(); }
+  else if(action==='go-bigsmall'){ startBigSmall(); }
+  else if(action==='bigsmall-again'){ startBigSmall(); }
+  else if(action==='go-pattern'){ startPattern(); }
+  else if(action==='pattern-again'){ startPattern(); }
+  else if(action==='go-memory'){ startMemory(); }
+  else if(action==='memory-again'){ startMemory(); }
+}
+
+document.getElementById('avatarFileInput').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file || pendingUploadIdx===null) return;
+  const reader = new FileReader();
+  reader.onload = (ev)=>{
+    tempPlayers[pendingUploadIdx].avatar = {type:'photo', value:ev.target.result};
+    document.getElementById('setup-preview-'+pendingUploadIdx).innerHTML = renderAvatarHTML(tempPlayers[pendingUploadIdx].avatar, 'avatar-lg');
+    pendingUploadIdx = null;
+  };
+  reader.readAsDataURL(file);
+  e.target.value = '';
+});
+
+
+/* ================= generic multiplayer quiz engine ================= */
+function genMathQuestions(count){
+  count = count || ROUND_LEN;
+  const qs = [];
+  for(let i=0;i<count;i++){
+    const r = Math.random();
+    let a,b,ans,opText;
+    if(r < 0.45){
+      a = 1+Math.floor(Math.random()*20);
+      b = 1+Math.floor(Math.random()*20);
+      ans = a+b; opText = '+';
+    }else if(r < 0.8){
+      a = 2+Math.floor(Math.random()*19);
+      b = 1+Math.floor(Math.random()*a);
+      ans = a-b; opText = '−';
+    }else{
+      a = 1+Math.floor(Math.random()*10);
+      b = 1+Math.floor(Math.random()*5);
+      ans = a*b; opText = '×';
+    }
+    const options = new Set([ans]);
+    while(options.size<4){
+      const delta = (Math.floor(Math.random()*5)+1) * (Math.random()<0.5?-1:1);
+      const cand = ans+delta;
+      if(cand>=0) options.add(cand);
+    }
+    const opts = shuffle(Array.from(options));
+    qs.push({text:`${a} ${opText} ${b} = ?`, answer:ans, options:opts});
+  }
+  return qs;
+}
+function genSpellingRound(count){
+  count = count || ROUND_LEN;
+  const words = shuffle(WORD_BANK).slice(0, count);
+  return words.map(w=>{
+    const blankIdx = Math.floor(Math.random()*w.word.length);
+    const correctLetter = w.word[blankIdx];
+    const distractors = new Set();
+    const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    while(distractors.size<3){
+      const l = alphabet[Math.floor(Math.random()*alphabet.length)];
+      if(l!==correctLetter) distractors.add(l);
+    }
+    const options = shuffle([correctLetter, ...distractors]);
+    return {word:w.word, emoji:w.emoji, blankIdx, correctLetter, options};
+  });
+}
+
+function getGameMeta(gameKey){
+  if(gameKey==='math') return {name:'Math Quest', icon:'🔢'};
+  if(gameKey==='spelling') return {name:'Word Wizard', icon:'🔤'};
+  if(gameKey==='ramayana') return {name:'Ramayana Quiz', icon:'🏹'};
+  if(gameKey==='henry8') return {name:'Henry VIII Quiz', icon:'👑'};
+  if(gameKey==='flags') return {name:'Flag Match', icon:'🌍'};
+  if(gameKey==='timestables') return {name:'Times Tables', icon:'✖️'};
+  if(gameKey==='scramble') return {name:'Word Scramble', icon:'🔀'};
+  if(gameKey==='animalfacts') return {name:'Animal Facts Quiz', icon:'🦓'};
+  if(gameKey==='book') return {name: BOOK_QUIZZES[currentBookKey].title, icon: BOOK_QUIZZES[currentBookKey].icon};
+  return {name:'Game', icon:'🎮'};
+}
+function generateSessionQuestions(gameKey, len){
+  if(gameKey==='math') return {type:'math', items: genMathQuestions(len)};
+  if(gameKey==='spelling') return {type:'spelling', items: genSpellingRound(len)};
+  if(gameKey==='ramayana') return {type:'trivia', items: shuffle(RAMAYANA_QUESTIONS).slice(0,len)};
+  if(gameKey==='henry8') return {type:'trivia', items: shuffle(HENRY8_QUESTIONS).slice(0,len)};
+  if(gameKey==='flags') return {type:'flag', items: genFlagQuestions(len)};
+  if(gameKey==='timestables') return {type:'math', items: genTimesTablesQuestions(len)};
+  if(gameKey==='scramble') return {type:'trivia', items: genScrambleQuestions(len)};
+  if(gameKey==='animalfacts') return {type:'trivia', items: shuffle(ANIMAL_FACTS_QUESTIONS).slice(0,len)};
+  if(gameKey==='book') return {type:'trivia', items: shuffle(BOOK_QUIZZES[currentBookKey].questions).slice(0,len)};
+}
+
+function enterGame(gameKey){
+  currentGameKey = gameKey;
+  currentBookKey = null;
+  goToPlayerCount();
+}
+function goToPlayerCount(){
+  const meta = getGameMeta(currentGameKey);
+  document.getElementById('playercount-sub').textContent = `How many players for ${meta.name}?`;
+  const grid = document.getElementById('playercount-grid');
+  grid.innerHTML = '';
+  [1,2,3,4].forEach(n=>{
+    const b = document.createElement('button');
+    b.className = 'count-btn focusable';
+    b.textContent = n===1 ? '1 Player' : n+' Players';
+    b.dataset.action = 'pick-playercount';
+    b.dataset.count = n;
+    grid.appendChild(b);
+  });
+  showScreen('playercount');
+}
+function renderSetupDynamic(){
+  const container = document.getElementById('setup-columns');
+  container.innerHTML = '';
+  tempPlayers.forEach((pl, i)=>{
+    const col = document.createElement('div');
+    col.className = 'player-col';
+    col.innerHTML = `
+      <div class="avatar-preview" id="setup-preview-${i}">${renderAvatarHTML(pl.avatar,'avatar-lg')}</div>
+      <span class="eyebrow">Player ${i+1}</span>
+      <div class="avatar-grid" id="setup-grid-${i}"></div>
+      <button class="upload-btn focusable" data-action="upload-player" data-idx="${i}">📷 Upload Selfie</button>
+    `;
+    container.appendChild(col);
+    const grid = col.querySelector(`#setup-grid-${i}`);
+    PRESET_AVATARS.forEach(emoji=>{
+      const b = document.createElement('button');
+      b.className = 'avatar-option focusable';
+      b.textContent = emoji;
+      b.dataset.action = 'select-avatar-n';
+      b.dataset.idx = i;
+      b.dataset.emoji = emoji;
+      if(pl.avatar.type==='emoji' && pl.avatar.value===emoji) b.classList.add('selected');
+      grid.appendChild(b);
+    });
+  });
+  refreshFocusables();
+}
+function showCountPicker(){
+  const meta = getGameMeta(currentGameKey);
+  document.getElementById('count-sub').textContent = `How many questions for ${meta.name}?`;
+  const grid = document.getElementById('count-grid');
+  grid.innerHTML = '';
+  COUNT_OPTIONS.forEach(n=>{
+    const b = document.createElement('button');
+    b.className = 'count-btn focusable';
+    b.textContent = n;
+    b.dataset.action = 'pick-count';
+    b.dataset.count = n;
+    grid.appendChild(b);
+  });
+  showScreen('count');
+}
+function showTurnBanner(playerNum, callback){
+  inputLocked = true;
+  document.getElementById('turnBannerAvatar').innerHTML = renderAvatarHTML(players[playerNum-1].avatar, 'avatar-xl');
+  document.getElementById('turnBannerText').textContent = `Player ${playerNum}'s Turn!`;
+  document.getElementById('turnBanner').classList.add('show');
+  playSelect();
+  setTimeout(()=>{
+    document.getElementById('turnBanner').classList.remove('show');
+    inputLocked = false;
+    callback();
+  }, 1500);
+}
+function startSession(count){
+  const key = currentGameKey==='book' ? 'book_'+currentBookKey : currentGameKey;
+  questionCounts[key] = count;
+  const gen = generateSessionQuestions(currentGameKey, count);
+  session = { type: gen.type, items: gen.items, len: count, turn: 0, idx: 0, scores: players.map(()=>0), locked:false };
+  showScreen('play');
+  if(players.length > 1){ showTurnBanner(1, renderPlayTurn); }
+  else{ renderPlayTurn(); }
+}
+function renderPlayLanes(){
+  const single = document.getElementById('play-single-stars');
+  const track = document.getElementById('play-duel-track');
+  if(players.length===1){
+    single.style.display = 'flex';
+    track.style.display = 'none';
+    document.getElementById('play-single-score').textContent = session.scores[0];
+  }else{
+    single.style.display = 'none';
+    track.style.display = 'flex';
+    track.innerHTML = '';
+    players.forEach((p,i)=>{
+      const pct = 6 + (session.scores[i]/session.len)*80;
+      const lane = document.createElement('div');
+      lane.className = 'lane';
+      lane.innerHTML = `<div class="lane-avatar" style="left:${pct}%">${renderAvatarHTML(p.avatar,'avatar-sm')}</div><span class="lane-score">${session.scores[i]}</span>`;
+      track.appendChild(lane);
+    });
+  }
+}
+function renderPlayTurn(){
+  const meta = getGameMeta(currentGameKey);
+  const noun = session.type==='math' ? 'Question' : session.type==='spelling' ? 'Word' : 'Question';
+  document.getElementById('play-label').textContent = players.length>1
+    ? `Player ${session.turn+1} · ${noun} ${session.idx+1} of ${session.len}`
+    : `${meta.name} · ${noun} ${session.idx+1} of ${session.len}`;
+  renderProgress('play-progress', session.idx, session.len);
+  renderPlayLanes();
+  document.getElementById('play-math-card').style.display = session.type==='math' ? '' : 'none';
+  document.getElementById('play-spell-card').style.display = session.type==='spelling' ? '' : 'none';
+  document.getElementById('play-trivia-card').style.display = session.type==='trivia' ? '' : 'none';
+  document.getElementById('play-flag-card').style.display = session.type==='flag' ? '' : 'none';
+  if(session.type==='math') renderPlayMath();
+  else if(session.type==='spelling') renderPlaySpelling();
+  else if(session.type==='flag') renderPlayFlag();
+  else renderPlayTrivia();
+  session.locked = false;
+  refreshFocusables();
+}
+function renderPlayMath(){
+  const q = session.items[session.idx];
+  document.getElementById('play-equation').textContent = q.text;
+  const wrap = document.getElementById('play-math-choices');
+  wrap.innerHTML = '';
+  q.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn focusable';
+    b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#play-math-choices .choice-btn').forEach(bb=>{
+        if(Number(bb.textContent)===q.answer) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      answerPlay(opt===q.answer);
+    });
+    wrap.appendChild(b);
+  });
+}
+function renderPlaySpelling(){
+  const w = session.items[session.idx];
+  document.getElementById('play-spell-emoji').textContent = w.emoji;
+  const slotsWrap = document.getElementById('play-spell-slots');
+  slotsWrap.innerHTML = '';
+  w.word.split('').forEach((ch,i)=>{
+    const s = document.createElement('div');
+    s.className = 'slot' + (i===w.blankIdx?' blank':'');
+    s.textContent = i===w.blankIdx ? '_' : ch;
+    s.id = 'play-slot-'+i;
+    slotsWrap.appendChild(s);
+  });
+  const lWrap = document.getElementById('play-spell-letters');
+  lWrap.innerHTML = '';
+  w.options.forEach(letter=>{
+    const b = document.createElement('button');
+    b.className = 'letter-btn focusable';
+    b.textContent = letter;
+    b.addEventListener('click', ()=>{
+      const isCorrect = letter===w.correctLetter;
+      document.querySelectorAll('#play-spell-letters .letter-btn').forEach(bb=>{
+        if(bb.textContent===w.correctLetter) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      if(isCorrect) document.getElementById('play-slot-'+w.blankIdx).textContent = w.correctLetter;
+      answerPlay(isCorrect);
+    });
+    lWrap.appendChild(b);
+  });
+}
+function renderPlayTrivia(){
+  const q = session.items[session.idx];
+  const meta = getGameMeta(currentGameKey);
+  document.getElementById('play-trivia-emoji').textContent = q.emoji || meta.icon;
+  document.getElementById('play-trivia-question').textContent = q.q;
+  const opts = shuffle(q.options);
+  const wrap = document.getElementById('play-trivia-choices');
+  wrap.innerHTML = '';
+  opts.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn focusable';
+    b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#play-trivia-choices .choice-btn').forEach(bb=>{
+        if(bb.textContent===q.answer) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      answerPlay(opt===q.answer);
+    });
+    wrap.appendChild(b);
+  });
+}
+function renderPlayFlag(){
+  const q = session.items[session.idx];
+  document.getElementById('play-flag-display').innerHTML = flagSVG(q.code, 130);
+  const wrap = document.getElementById('play-flag-choices');
+  wrap.innerHTML = '';
+  q.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn focusable';
+    b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#play-flag-choices .choice-btn').forEach(bb=>{
+        if(bb.textContent===q.answer) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      answerPlay(opt===q.answer);
+    });
+    wrap.appendChild(b);
+  });
+}
+function answerPlay(isCorrect){
+  if(session.locked) return;
+  session.locked = true;
+  if(isCorrect){
+    session.scores[session.turn]++;
+    renderPlayLanes();
+    playCorrect(); confettiBurst();
+    momoSay(pick(["Yes!","Nice one!","Woohoo!","You got it!"]), 'happy');
+  }else{
+    playWrong();
+    momoSay(pick(["So close!","Nice try!","Keep going!"]), 'oops');
+  }
+  setTimeout(()=>{
+    if(currentScreen!=='play') return;
+    session.idx++;
+    if(session.idx>=session.len){
+      if(session.turn < players.length-1){
+        session.turn++;
+        session.idx = 0;
+        showTurnBanner(session.turn+1, renderPlayTurn);
+      }else{
+        showPlayResults();
+      }
+    }else{
+      renderPlayTurn();
+    }
+  }, 1100);
+}
+function showPlayResults(){
+  const wrap = document.getElementById('leaderboard-list');
+  wrap.innerHTML = '';
+  const maxScore = Math.max(...session.scores);
+  const topCount = session.scores.filter(s=>s===maxScore).length;
+  const ranked = players.map((p,i)=>({p, i, score:session.scores[i]})).sort((a,b)=>b.score-a.score);
+  ranked.forEach(({p,i,score})=>{
+    const row = document.createElement('div');
+    row.className = 'lb-row';
+    const crown = (players.length>1 && score===maxScore) ? '👑 ' : '';
+    row.innerHTML = `<div class="lb-avatar">${renderAvatarHTML(p.avatar,'avatar-md')}</div><span class="lb-name">${crown}Player ${i+1}</span><span class="lb-score">${score} / ${session.len}</span>`;
+    wrap.appendChild(row);
+  });
+  let title;
+  if(players.length===1){
+    title = session.scores[0]===session.len ? 'Perfect score!' : session.scores[0]>=session.len*0.6 ? 'Wonderful!' : 'Nice try!';
+  }else if(topCount>1){
+    title = "It's a Tie!";
+  }else{
+    title = `Player ${ranked[0].i+1} Wins!`;
+  }
+  document.getElementById('results-title').textContent = title;
+  document.getElementById('results-emoji').textContent = players.length>1 ? '🏆' : '⭐';
+  momoSay(players.length>1 ? "What a match!" : "Great job learning!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('results');
+}
+
+/* ================= flag match, times tables, word scramble, animal facts data ================= */
+/* ================= ramayana & henry viii question data ================= */
+const RAMAYANA_QUESTIONS = [
+  {emoji:'🏹', q:"Who is the hero of the Ramayana?", options:["Rama","Krishna","Hanuman","Ravana"], answer:"Rama"},
+  {emoji:'👑', q:"Who is Rama's wife?", options:["Sita","Radha","Parvati","Lakshmi"], answer:"Sita"},
+  {emoji:'🌳', q:"Which loyal brother went with Rama into the forest?", options:["Bharata","Lakshmana","Shatrughna","Vibhishana"], answer:"Lakshmana"},
+  {emoji:'🐒', q:"Who is the mighty monkey who helps Rama find Sita?", options:["Ganesha","Hanuman","Indra","Garuda"], answer:"Hanuman"},
+  {emoji:'😈', q:"Who is the demon king who kidnaps Sita?", options:["Ravana","Kumbhakarna","Vali","Indrajit"], answer:"Ravana"},
+  {emoji:'🏝️', q:"Where does Ravana take Sita?", options:["Ayodhya","Lanka","Mithila","Kishkindha"], answer:"Lanka"},
+  {emoji:'🌉', q:"What do the monkeys build to cross the ocean to Lanka?", options:["A bridge","A boat","A tunnel","A flying chariot"], answer:"A bridge"},
+  {emoji:'🐵', q:"Who is the monkey king who becomes Rama's friend?", options:["Sugriva","Kubera","Agni","Varuna"], answer:"Sugriva"},
+  {emoji:'🎉', q:"What festival celebrates Rama's return to Ayodhya?", options:["Diwali","Holi","Navratri","Raksha Bandhan"], answer:"Diwali"},
+  {emoji:'📅', q:"How many years was Rama away from his kingdom?", options:["14 years","5 years","20 years","1 year"], answer:"14 years"},
+  {emoji:'🏰', q:"What is Sita's father's name?", options:["King Janaka","King Dasharatha","King Sugriva","King Ravana"], answer:"King Janaka"},
+  {emoji:'👑', q:"How many wives did King Dasharatha have?", options:["3","1","2","4"], answer:"3"},
+  {emoji:'👬', q:"Which two of Rama's brothers were twins?", options:["Lakshmana and Shatrughna","Bharata and Lakshmana","Rama and Bharata","Shatrughna and Bharata"], answer:"Lakshmana and Shatrughna"},
+  {emoji:'👸', q:"What was the name of King Dasharatha's youngest wife?", options:["Queen Sumitra","Queen Kaushalya","Queen Kaikeyi","Queen Mandodari"], answer:"Queen Sumitra"},
+  {emoji:'👵', q:"Who influenced Queen Kaikeyi to become bitter and ask for her boons?", options:["Manthara","Shurpanakha","Mandodari","Tataka"], answer:"Manthara"},
+  {emoji:'👰', q:"What is the name of Lakshmana's wife?", options:["Urmila","Mandavi","Shrutakirti","Shanta"], answer:"Urmila"},
+  {emoji:'🏙️', q:"In which city was Rama born?", options:["Ayodhya","Lanka","Mithila","Kishkindha"], answer:"Ayodhya"},
+  {emoji:'👑', q:"Who is Rama's father?", options:["King Dasharatha","King Janaka","King Sugriva","King Vali"], answer:"King Dasharatha"},
+  {emoji:'👸', q:"Who is Rama's mother?", options:["Queen Kaushalya","Queen Kaikeyi","Queen Sumitra","Queen Mandodari"], answer:"Queen Kaushalya"},
+  {emoji:'👑', q:"Who is Bharata's mother?", options:["Queen Kaikeyi","Queen Kaushalya","Queen Sumitra","Queen Mandodari"], answer:"Queen Kaikeyi"},
+  {emoji:'🤴', q:"Who is Rama's youngest brother?", options:["Shatrughna","Bharata","Lakshmana","Vibhishana"], answer:"Shatrughna"},
+  {emoji:'🏯', q:"In which city did Sita grow up?", options:["Mithila","Ayodhya","Lanka","Kishkindha"], answer:"Mithila"},
+  {emoji:'📜', q:"Who wrote the Ramayana?", options:["Sage Valmiki","Sage Vashishta","Sage Vishwamitra","Sage Agastya"], answer:"Sage Valmiki"},
+  {emoji:'✍️', q:"What does the word \"Ramayana\" mean?", options:["The story of Rama's journey","The story of a great battle","The story of a magic bow","The story of a kingdom"], answer:"The story of Rama's journey"},
+  {emoji:'👹', q:"How many heads did Ravana have?", options:["10","5","1","20"], answer:"10"},
+  {emoji:'🤝', q:"Which of Ravana's brothers switched sides to help Rama?", options:["Vibhishana","Kumbhakarna","Indrajit","Vali"], answer:"Vibhishana"},
+  {emoji:'😴', q:"Which of Ravana's brothers was famous for sleeping for months at a time?", options:["Kumbhakarna","Vibhishana","Indrajit","Sugriva"], answer:"Kumbhakarna"},
+  {emoji:'⚔️', q:"What was the name of Ravana's powerful son?", options:["Indrajit","Vibhishana","Kumbhakarna","Vali"], answer:"Indrajit"},
+  {emoji:'👑', q:"What is the name of Ravana's wife?", options:["Mandodari","Kaikeyi","Urmila","Shabari"], answer:"Mandodari"},
+  {emoji:'😆', q:"What is the name of Ravana's sister who tried to trick Rama and Lakshmana?", options:["Shurpanakha","Mandodari","Tataka","Manthara"], answer:"Shurpanakha"},
+  {emoji:'🛡️', q:"Who protected Sita when Ravana's sister tried to cause trouble?", options:["Lakshmana","Bharata","Hanuman","Sugriva"], answer:"Lakshmana"},
+  {emoji:'🦅', q:"Which brave bird tried to stop Ravana from taking Sita?", options:["Jatayu","Garuda","Sampati","Hanuman"], answer:"Jatayu"},
+  {emoji:'🐦', q:"What kind of creature was Jatayu?", options:["A bird","A monkey","A bear","A snake"], answer:"A bird"},
+  {emoji:'🏞️', q:"In which kingdom did Rama meet Hanuman and Sugriva?", options:["Kishkindha","Mithila","Lanka","Ayodhya"], answer:"Kishkindha"},
+  {emoji:'👊', q:"Who was Sugriva's brother that Rama helped defeat?", options:["Vali","Vibhishana","Indrajit","Kumbhakarna"], answer:"Vali"},
+  {emoji:'💍', q:"What did Hanuman show Sita in Lanka to prove Rama had sent him?", options:["Rama's ring","Rama's crown","Rama's sword","Rama's sandals"], answer:"Rama's ring"},
+  {emoji:'📿', q:"What did Sita give Hanuman to bring back to Rama?", options:["Her hairpin (jewel)","Her necklace","Her ring","A flower"], answer:"Her hairpin (jewel)"},
+  {emoji:'🔥', q:"What did an angry Hanuman do to part of Lanka before he left?", options:["Set it on fire with his tail","Flooded it with water","Knocked down its walls","Turned it to stone"], answer:"Set it on fire with his tail"},
+  {emoji:'👑', q:"Who ruled Ayodhya on Rama's behalf while he was in exile?", options:["Bharata","Shatrughna","Vibhishana","Sugriva"], answer:"Bharata"},
+  {emoji:'👞', q:"What did Bharata place on Ayodhya's throne to represent Rama?", options:["Rama's sandals","Rama's crown","Rama's bow","Rama's sword"], answer:"Rama's sandals"},
+  {emoji:'🤔', q:"Why did Rama have to leave for the forest?", options:["His father had promised Queen Kaikeyi two wishes","He wanted an adventure","He was banished by Ravana","He lost a competition"], answer:"His father had promised Queen Kaikeyi two wishes"},
+  {emoji:'🍇', q:"Which old woman offered Rama berries she had already tasted, to be sure they were sweet?", options:["Shabari","Manthara","Mandodari","Kaikeyi"], answer:"Shabari"},
+  {emoji:'🌊', q:"Which river did Rama cross at the start of his exile?", options:["The Ganga River","The Yamuna River","The ocean","A lake"], answer:"The Ganga River"},
+  {emoji:'🌲', q:"What was the name of the forest where Rama, Sita, and Lakshmana lived during the exile?", options:["Dandaka Forest","Kishkindha Forest","Ashoka Forest","Sundarbans"], answer:"Dandaka Forest"},
+  {emoji:'🏹', q:"How did Rama win Sita's hand in marriage?", options:["He lifted and broke a mighty bow","He won a running race","He solved a riddle","He fought a dragon"], answer:"He lifted and broke a mighty bow"},
+  {emoji:'🔱', q:"Which god's bow did Rama break to marry Sita?", options:["Lord Shiva's","Lord Vishnu's","Lord Indra's","Lord Brahma's"], answer:"Lord Shiva's"},
+  {emoji:'🎊', q:"Which festival celebrates Rama's victory over Ravana?", options:["Dussehra","Holi","Navratri","Raksha Bandhan"], answer:"Dussehra"},
+  {emoji:'🪔', q:"What did people do to welcome Rama home to Ayodhya?", options:["Lit rows of lamps (diyas)","Built a new palace","Held a big race","Painted the sky"], answer:"Lit rows of lamps (diyas)"},
+  {emoji:'🐿️', q:"Which tiny animal helped build the bridge by carrying pebbles?", options:["A squirrel","A mouse","A bird","A frog"], answer:"A squirrel"},
+  {emoji:'🐿️', q:"According to the story, why do squirrels have stripes on their backs?", options:["Rama gently petted one with his fingers to thank it","They painted themselves for the parade","Hanuman marked them with his tail","They were born that way"], answer:"Rama gently petted one with his fingers to thank it"}
+];
+
+const HENRY8_QUESTIONS = [
+  {emoji:'👑', q:"What country did Henry VIII rule as king?", options:["England","France","Spain","Scotland"], answer:"England"},
+  {emoji:'🌹', q:"Which royal family did Henry VIII belong to?", options:["The Tudors","The Stuarts","The Windsors","The Plantagenets"], answer:"The Tudors"},
+  {emoji:'💍', q:"How many times was Henry VIII married?", options:["6","2","4","8"], answer:"6"},
+  {emoji:'👸', q:"Who was Henry VIII's first wife?", options:["Catherine of Aragon","Anne Boleyn","Jane Seymour","Catherine Parr"], answer:"Catherine of Aragon"},
+  {emoji:'👸', q:"Who was Henry VIII's second wife?", options:["Anne Boleyn","Catherine of Aragon","Anne of Cleves","Catherine Howard"], answer:"Anne Boleyn"},
+  {emoji:'👸', q:"Who was Henry VIII's third wife?", options:["Jane Seymour","Anne Boleyn","Catherine Howard","Catherine Parr"], answer:"Jane Seymour"},
+  {emoji:'👸', q:"Who was Henry VIII's fourth wife?", options:["Anne of Cleves","Jane Seymour","Catherine Howard","Catherine of Aragon"], answer:"Anne of Cleves"},
+  {emoji:'👸', q:"Who was Henry VIII's fifth wife?", options:["Catherine Howard","Anne Boleyn","Jane Seymour","Catherine Parr"], answer:"Catherine Howard"},
+  {emoji:'👸', q:"Who was Henry VIII's sixth and final wife?", options:["Catherine Parr","Anne of Cleves","Jane Seymour","Catherine of Aragon"], answer:"Catherine Parr"},
+  {emoji:'👶', q:"Which wife was the mother of King Edward VI?", options:["Jane Seymour","Anne Boleyn","Catherine of Aragon","Catherine Parr"], answer:"Jane Seymour"},
+  {emoji:'👑', q:"Which wife was the mother of Queen Elizabeth I?", options:["Anne Boleyn","Jane Seymour","Catherine of Aragon","Anne of Cleves"], answer:"Anne Boleyn"},
+  {emoji:'👑', q:"Which wife was the mother of Queen Mary I?", options:["Catherine of Aragon","Anne Boleyn","Jane Seymour","Catherine Howard"], answer:"Catherine of Aragon"},
+  {emoji:'⛪', q:"What new church did Henry VIII create?", options:["The Church of England","The Catholic Church","The Church of Rome","The Orthodox Church"], answer:"The Church of England"},
+  {emoji:'🤴', q:"Who was Henry VIII's father?", options:["Henry VII","Edward IV","Richard III","Henry VI"], answer:"Henry VII"},
+  {emoji:'🏰', q:"Which grand palace did Henry VIII love and expand?", options:["Hampton Court Palace","Windsor Castle","Buckingham Palace","Tower Bridge"], answer:"Hampton Court Palace"},
+  {emoji:'🌹', q:"What flower became the symbol of the Tudor family?", options:["The Tudor rose","The lily","The daisy","The thistle"], answer:"The Tudor rose"},
+  {emoji:'📅', q:"In which century did Henry VIII rule?", options:["The 1500s","The 1200s","The 1700s","The 1900s"], answer:"The 1500s"},
+  {emoji:'🏇', q:"What sport did young Henry VIII enjoy?", options:["Jousting","Basketball","Skiing","Surfing"], answer:"Jousting"},
+  {emoji:'👦', q:"What was the name of Henry VIII's only son to become king?", options:["Edward VI","Henry IX","Richard IV","James I"], answer:"Edward VI"},
+  {emoji:'📜', q:"Why did Henry VIII break away from the Pope in Rome?", options:["The Pope wouldn't let him end his first marriage","He didn't like Rome","He wanted to build a new palace","He lost a war"], answer:"The Pope wouldn't let him end his first marriage"}
+];
+
+const FLAG_COUNTRIES = [
+  {code:'france', name:'France'},
+  {code:'italy', name:'Italy'},
+  {code:'germany', name:'Germany'},
+  {code:'netherlands', name:'Netherlands'},
+  {code:'belgium', name:'Belgium'},
+  {code:'ireland', name:'Ireland'},
+  {code:'poland', name:'Poland'},
+  {code:'japan', name:'Japan'},
+  {code:'switzerland', name:'Switzerland'},
+  {code:'sweden', name:'Sweden'},
+  {code:'spain', name:'Spain'},
+  {code:'russia', name:'Russia'},
+  {code:'nigeria', name:'Nigeria'},
+  {code:'indonesia', name:'Indonesia'},
+  {code:'china', name:'China'}
+];
+function flagSVG(code, size){
+  size = size || 90;
+  const w = size, h = Math.round(size*0.67);
+  const common = `width="${w}" height="${h}" viewBox="0 0 150 100" xmlns="http://www.w3.org/2000/svg"`;
+  const flags = {
+    france: `<svg ${common}><rect width="150" height="100" fill="#fff"/><rect width="50" height="100" fill="#0055A4"/><rect x="100" width="50" height="100" fill="#EF4135"/></svg>`,
+    italy: `<svg ${common}><rect width="150" height="100" fill="#fff"/><rect width="50" height="100" fill="#009246"/><rect x="100" width="50" height="100" fill="#CE2B37"/></svg>`,
+    germany: `<svg ${common}><rect width="150" height="100" fill="#FFCE00"/><rect width="150" height="33.3" fill="#000"/><rect y="33.3" width="150" height="33.3" fill="#DD0000"/></svg>`,
+    netherlands: `<svg ${common}><rect width="150" height="100" fill="#21468B"/><rect width="150" height="33.3" fill="#AE1C28"/><rect y="33.3" width="150" height="33.3" fill="#fff"/></svg>`,
+    belgium: `<svg ${common}><rect width="150" height="100" fill="#EF3340"/><rect width="50" height="100" fill="#000"/><rect x="50" width="50" height="100" fill="#FDDA24"/></svg>`,
+    ireland: `<svg ${common}><rect width="150" height="100" fill="#FF883E"/><rect width="50" height="100" fill="#169B62"/><rect x="50" width="50" height="100" fill="#fff"/></svg>`,
+    poland: `<svg ${common}><rect width="150" height="100" fill="#DC143C"/><rect width="150" height="50" fill="#fff"/></svg>`,
+    japan: `<svg ${common}><rect width="150" height="100" fill="#fff"/><circle cx="75" cy="50" r="30" fill="#BC002D"/></svg>`,
+    switzerland: `<svg ${common}><rect width="150" height="100" fill="#FF0000"/><rect x="65" y="30" width="20" height="40" fill="#fff"/><rect x="55" y="40" width="40" height="20" fill="#fff"/></svg>`,
+    sweden: `<svg ${common}><rect width="150" height="100" fill="#006AA7"/><rect x="55" width="20" height="100" fill="#FECC02"/><rect y="40" width="150" height="20" fill="#FECC02"/></svg>`,
+    spain: `<svg ${common}><rect width="150" height="100" fill="#AA151B"/><rect y="25" width="150" height="50" fill="#F1BF00"/></svg>`,
+    russia: `<svg ${common}><rect width="150" height="100" fill="#fff"/><rect y="33.3" width="150" height="33.3" fill="#0039A6"/><rect y="66.6" width="150" height="33.4" fill="#D52B1E"/></svg>`,
+    nigeria: `<svg ${common}><rect width="150" height="100" fill="#fff"/><rect width="50" height="100" fill="#008751"/><rect x="100" width="50" height="100" fill="#008751"/></svg>`,
+    indonesia: `<svg ${common}><rect width="150" height="100" fill="#fff"/><rect width="150" height="50" fill="#CE1126"/></svg>`,
+    china: `<svg ${common}><rect width="150" height="100" fill="#DE2910"/><text x="15" y="42" font-size="30" fill="#FFDE00">★</text></svg>`
+  };
+  return flags[code] || `<svg ${common}><rect width="150" height="100" fill="#888"/></svg>`;
+}
+function genFlagQuestions(count){
+  const chosen = [];
+  for(let i=0;i<count;i++){ chosen.push(FLAG_COUNTRIES[i % FLAG_COUNTRIES.length]); }
+  return shuffle(chosen).map(target=>{
+    const distractors = shuffle(FLAG_COUNTRIES.filter(c=>c.code!==target.code)).slice(0,3);
+    const options = shuffle([target.name, ...distractors.map(d=>d.name)]);
+    return {code:target.code, q:'Which country is this flag from?', options, answer:target.name};
+  });
+}
+function genTimesTablesQuestions(count){
+  const qs = [];
+  for(let i=0;i<count;i++){
+    const a = 1+Math.floor(Math.random()*12);
+    const b = 1+Math.floor(Math.random()*12);
+    const ans = a*b;
+    const options = new Set([ans]);
+    while(options.size<4){
+      const delta = (Math.floor(Math.random()*8)+1) * (Math.random()<0.5?-1:1);
+      const cand = ans+delta;
+      if(cand>=0) options.add(cand);
+    }
+    const opts = shuffle(Array.from(options));
+    qs.push({text:`${a} × ${b} = ?`, answer:ans, options:opts});
+  }
+  return qs;
+}
+const WORD_SCRAMBLE_BANK = [
+  {emoji:'🐱', letters:"T A C", answer:"CAT", options:["CAT","BAT","HAT","MAT"]},
+  {emoji:'🐶', letters:"G O D", answer:"DOG", options:["DOG","LOG","FOG","BIG"]},
+  {emoji:'☀️', letters:"N U S", answer:"SUN", options:["SUN","RUN","FUN","BUN"]},
+  {emoji:'🐟', letters:"H S I F", answer:"FISH", options:["FISH","WISH","DISH","FIST"]},
+  {emoji:'⭐', letters:"R A T S", answer:"STAR", options:["STAR","CARD","PART","DART"]},
+  {emoji:'🌙', letters:"N O O M", answer:"MOON", options:["MOON","NOON","ROOM","ROOF"]},
+  {emoji:'📖', letters:"K O O B", answer:"BOOK", options:["BOOK","LOOK","COOK","TOOK"]},
+  {emoji:'🐸', letters:"G O R F", answer:"FROG", options:["FROG","FORT","FORK","FROM"]},
+  {emoji:'🦆', letters:"K C U D", answer:"DUCK", options:["DUCK","LUCK","TUCK","DUST"]},
+  {emoji:'🍎', letters:"E L P P A", answer:"APPLE", options:["APPLE","APPLY","AMPLE","MAPLE"]},
+  {emoji:'🏠', letters:"E S U O H", answer:"HOUSE", options:["HOUSE","MOUSE","HORSE","HOSE"]},
+  {emoji:'🐯', letters:"R E G I T", answer:"TIGER", options:["TIGER","TIGHT","RIVER","TIMER"]},
+  {emoji:'☁️', letters:"D U O L C", answer:"CLOUD", options:["CLOUD","COULD","CROWD","CLOUT"]},
+  {emoji:'😊', letters:"E L I M S", answer:"SMILE", options:["SMILE","SLIME","MILES","SMELL"]},
+  {emoji:'💧', letters:"R E T A W", answer:"WATER", options:["WATER","LATER","WAFER","WAVER"]},
+  {emoji:'🚂', letters:"N I A R T", answer:"TRAIN", options:["TRAIN","BRAIN","TRAIL","TRAIT"]}
+];
+function genScrambleQuestions(count){
+  const chosen = [];
+  for(let i=0;i<count;i++){ chosen.push(WORD_SCRAMBLE_BANK[i % WORD_SCRAMBLE_BANK.length]); }
+  return shuffle(chosen).map(w=>({emoji:w.emoji, q:`Unscramble: ${w.letters}`, options:w.options, answer:w.answer}));
+}
+const ANIMAL_FACTS_QUESTIONS = [
+  {emoji:'🦒', q:"Which animal has the longest neck?", options:["Giraffe","Elephant","Zebra","Lion"], answer:"Giraffe"},
+  {emoji:'🐘', q:"Which is the largest land animal?", options:["Elephant","Rhino","Hippo","Giraffe"], answer:"Elephant"},
+  {emoji:'🐆', q:"Which animal is known as the fastest land animal?", options:["Cheetah","Lion","Horse","Ostrich"], answer:"Cheetah"},
+  {emoji:'🦉', q:"Which bird is known for being active at night?", options:["Owl","Sparrow","Robin","Eagle"], answer:"Owl"},
+  {emoji:'🐧', q:"Which bird cannot fly but is a great swimmer?", options:["Penguin","Eagle","Parrot","Flamingo"], answer:"Penguin"},
+  {emoji:'🐢', q:"Which reptile is famous for its hard shell home?", options:["Turtle","Lizard","Snake","Crocodile"], answer:"Turtle"},
+  {emoji:'🦁', q:"What is a group of lions called?", options:["A pride","A pack","A herd","A flock"], answer:"A pride"},
+  {emoji:'🐺', q:"What is a group of wolves called?", options:["A pack","A pride","A herd","A colony"], answer:"A pack"},
+  {emoji:'🐝', q:"What do bees make in their hive?", options:["Honey","Silk","Milk","Wax only"], answer:"Honey"},
+  {emoji:'🕷️', q:"How many legs does a spider have?", options:["8","6","10","4"], answer:"8"},
+  {emoji:'🦋', q:"What does a caterpillar turn into?", options:["A butterfly","A bee","A beetle","A moth only"], answer:"A butterfly"},
+  {emoji:'🐊', q:"Which animal has the strongest bite of any land animal?", options:["Crocodile","Lion","Bear","Shark"], answer:"Crocodile"},
+  {emoji:'🐨', q:"Which animal mainly eats eucalyptus leaves?", options:["Koala","Panda","Kangaroo","Sloth"], answer:"Koala"},
+  {emoji:'🐼', q:"Which animal mainly eats bamboo?", options:["Panda","Koala","Elephant","Gorilla"], answer:"Panda"},
+  {emoji:'🦘', q:"Which animal carries its baby in a pouch?", options:["Kangaroo","Elephant","Horse","Deer"], answer:"Kangaroo"},
+  {emoji:'🐬', q:"Which sea animal is known for being very intelligent and playful?", options:["Dolphin","Shark","Jellyfish","Crab"], answer:"Dolphin"},
+  {emoji:'🦥', q:"Which animal is known for moving very, very slowly?", options:["Sloth","Cheetah","Rabbit","Hare"], answer:"Sloth"},
+  {emoji:'🐫', q:"Which animal can go a long time without drinking water?", options:["Camel","Horse","Cow","Pig"], answer:"Camel"}
+];
+
+/* ================= animal sound match (shayan) ================= */
+const ANIMAL_SOUNDS = [
+  {emoji:'🐄', name:'Cow', sound:'Moo!'},
+  {emoji:'🐱', name:'Cat', sound:'Meow!'},
+  {emoji:'🐶', name:'Dog', sound:'Woof!'},
+  {emoji:'🐑', name:'Sheep', sound:'Baa!'},
+  {emoji:'🐷', name:'Pig', sound:'Oink!'},
+  {emoji:'🦆', name:'Duck', sound:'Quack!'},
+  {emoji:'🐸', name:'Frog', sound:'Ribbit!'},
+  {emoji:'🦁', name:'Lion', sound:'Roar!'},
+  {emoji:'🐴', name:'Horse', sound:'Neigh!'},
+  {emoji:'🐔', name:'Chicken', sound:'Cluck!'}
+];
+const ANIMALSOUND_LEN = 8;
+let animalSoundState = {};
+function genAnimalSoundRounds(){
+  const rounds = [];
+  for(let i=0;i<ANIMALSOUND_LEN;i++){
+    const opts = shuffle(ANIMAL_SOUNDS).slice(0,4);
+    rounds.push({target: pick(opts), options: opts});
+  }
+  return rounds;
+}
+function startAnimalSound(){
+  animalSoundState = { rounds: genAnimalSoundRounds(), idx:0, stars:0, locked:false };
+  momoSay("Let's match animal sounds!");
+  showScreen('animalsound');
+  renderAnimalSoundRound();
+}
+function renderAnimalSoundRound(){
+  const r = animalSoundState.rounds[animalSoundState.idx];
+  document.getElementById('animalsound-label').textContent = `Round ${animalSoundState.idx+1} of ${ANIMALSOUND_LEN}`;
+  renderProgress('animalsound-progress', animalSoundState.idx, ANIMALSOUND_LEN);
+  document.getElementById('animalsound-text').textContent = `Who says "${r.target.sound}"?`;
+  const wrap = document.getElementById('animalsound-choices');
+  wrap.innerHTML = '';
+  r.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn carmatch-btn focusable';
+    b.innerHTML = `<span style="font-size:2.6rem;">${opt.emoji}</span>`;
+    b.addEventListener('click', ()=> answerAnimalSound(opt.name===r.target.name, b));
+    wrap.appendChild(b);
+  });
+  animalSoundState.locked = false;
+  refreshFocusables();
+}
+function answerAnimalSound(isCorrect, btnEl){
+  if(animalSoundState.locked) return;
+  animalSoundState.locked = true;
+  btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+  if(isCorrect){
+    animalSoundState.stars++;
+    playCorrect(); confettiBurst();
+    momoSay(pick(["Yes!","Great job, Shayan!","You got it!","Woohoo!"]), 'happy');
+  }else{
+    playWrong();
+    momoSay(pick(["Nice try!","Almost!","Keep going!"]), 'oops');
+  }
+  setTimeout(()=>{
+    if(currentScreen!=='animalsound') return;
+    animalSoundState.idx++;
+    if(animalSoundState.idx>=ANIMALSOUND_LEN) showAnimalSoundDone();
+    else renderAnimalSoundRound();
+  }, 1000);
+}
+function showAnimalSoundDone(){
+  const stars = animalSoundState.stars;
+  document.getElementById('animalsounddone-stars').textContent = '⭐'.repeat(stars) + '·'.repeat(ANIMALSOUND_LEN-stars);
+  document.getElementById('animalsounddone-title').textContent = stars===ANIMALSOUND_LEN ? 'Perfect, Shayan!' : 'Great job, Shayan!';
+  document.getElementById('animalsounddone-sub').textContent = `You matched ${stars} out of ${ANIMALSOUND_LEN}!`;
+  momoSay("You know your animal sounds!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('animalsounddone');
+}
+
+/* ================= big vs small (shayan) ================= */
+const BIGSMALL_LEN = 8;
+const BIGSMALL_EMOJIS = ['🚗','⭐','🎈','🍎','🐱','🐶','⚽','🌟'];
+let bigSmallState = {};
+function genBigSmallRounds(){
+  const rounds = [];
+  for(let i=0;i<BIGSMALL_LEN;i++){
+    const emoji = pick(BIGSMALL_EMOJIS);
+    const askBig = Math.random() < 0.5;
+    const bigFirst = Math.random() < 0.5;
+    rounds.push({emoji, askBig, bigFirst});
+  }
+  return rounds;
+}
+function startBigSmall(){
+  bigSmallState = { rounds: genBigSmallRounds(), idx:0, stars:0, locked:false };
+  momoSay("Let's find big and small!");
+  showScreen('bigsmall');
+  renderBigSmallRound();
+}
+function renderBigSmallRound(){
+  const r = bigSmallState.rounds[bigSmallState.idx];
+  document.getElementById('bigsmall-label').textContent = `Round ${bigSmallState.idx+1} of ${BIGSMALL_LEN}`;
+  renderProgress('bigsmall-progress', bigSmallState.idx, BIGSMALL_LEN);
+  document.getElementById('bigsmall-text').textContent = r.askBig ? 'Tap the BIGGER one!' : 'Tap the SMALLER one!';
+  const wrap = document.getElementById('bigsmall-choices');
+  wrap.innerHTML = '';
+  const sizes = r.bigFirst ? ['6rem','1.8rem'] : ['1.8rem','6rem'];
+  const bigIdx = r.bigFirst ? 0 : 1;
+  sizes.forEach((size, i)=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn bigsmall-btn focusable';
+    b.innerHTML = `<span style="font-size:${size};">${r.emoji}</span>`;
+    const correct = r.askBig ? (i===bigIdx) : (i!==bigIdx);
+    b.addEventListener('click', ()=> answerBigSmall(correct, b));
+    wrap.appendChild(b);
+  });
+  bigSmallState.locked = false;
+  refreshFocusables();
+}
+function answerBigSmall(isCorrect, btnEl){
+  if(bigSmallState.locked) return;
+  bigSmallState.locked = true;
+  btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+  if(isCorrect){
+    bigSmallState.stars++;
+    playCorrect(); confettiBurst();
+    momoSay(pick(["Yes!","Great job, Shayan!","You got it!","Woohoo!"]), 'happy');
+  }else{
+    playWrong();
+    momoSay(pick(["Nice try!","Almost!","Keep going!"]), 'oops');
+  }
+  setTimeout(()=>{
+    if(currentScreen!=='bigsmall') return;
+    bigSmallState.idx++;
+    if(bigSmallState.idx>=BIGSMALL_LEN) showBigSmallDone();
+    else renderBigSmallRound();
+  }, 1000);
+}
+function showBigSmallDone(){
+  const stars = bigSmallState.stars;
+  document.getElementById('bigsmalldone-stars').textContent = '⭐'.repeat(stars) + '·'.repeat(BIGSMALL_LEN-stars);
+  document.getElementById('bigsmalldone-title').textContent = stars===BIGSMALL_LEN ? 'Perfect, Shayan!' : 'Great job, Shayan!';
+  document.getElementById('bigsmalldone-sub').textContent = `You got ${stars} out of ${BIGSMALL_LEN}!`;
+  momoSay("You know big and small!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('bigsmalldone');
+}
+
+/* ================= pattern play (shayan) ================= */
+const PATTERN_LEN = 8;
+const PATTERN_ITEMS = ['🔴','🔵','🟡','🟢','⭐','🚗','🐱','❤️'];
+let patternState = {};
+function genPatternRounds(){
+  const rounds = [];
+  for(let i=0;i<PATTERN_LEN;i++){
+    const items = shuffle(PATTERN_ITEMS).slice(0,2);
+    const seq = [items[0], items[1], items[0], items[1]];
+    const answer = items[0];
+    const distractorPool = PATTERN_ITEMS.filter(x=>x!==items[0] && x!==items[1]);
+    const distractors = shuffle(distractorPool).slice(0,2);
+    const options = shuffle([answer, items[1], ...distractors]);
+    rounds.push({seq, answer, options});
+  }
+  return rounds;
+}
+function startPattern(){
+  patternState = { rounds: genPatternRounds(), idx:0, stars:0, locked:false };
+  momoSay("Let's find the pattern!");
+  showScreen('pattern');
+  renderPatternRound();
+}
+function renderPatternRound(){
+  const r = patternState.rounds[patternState.idx];
+  document.getElementById('pattern-label').textContent = `Round ${patternState.idx+1} of ${PATTERN_LEN}`;
+  renderProgress('pattern-progress', patternState.idx, PATTERN_LEN);
+  document.getElementById('pattern-seq').textContent = r.seq.join(' ') + '  ?';
+  const wrap = document.getElementById('pattern-choices');
+  wrap.innerHTML = '';
+  r.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn carmatch-btn focusable';
+    b.innerHTML = `<span style="font-size:2.4rem;">${opt}</span>`;
+    b.addEventListener('click', ()=> answerPattern(opt===r.answer, b));
+    wrap.appendChild(b);
+  });
+  patternState.locked = false;
+  refreshFocusables();
+}
+function answerPattern(isCorrect, btnEl){
+  if(patternState.locked) return;
+  patternState.locked = true;
+  btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+  if(isCorrect){
+    patternState.stars++;
+    playCorrect(); confettiBurst();
+    momoSay(pick(["Yes!","Great job, Shayan!","You got it!","Woohoo!"]), 'happy');
+  }else{
+    playWrong();
+    momoSay(pick(["Nice try!","Almost!","Keep going!"]), 'oops');
+  }
+  setTimeout(()=>{
+    if(currentScreen!=='pattern') return;
+    patternState.idx++;
+    if(patternState.idx>=PATTERN_LEN) showPatternDone();
+    else renderPatternRound();
+  }, 1000);
+}
+function showPatternDone(){
+  const stars = patternState.stars;
+  document.getElementById('patterndone-stars').textContent = '⭐'.repeat(stars) + '·'.repeat(PATTERN_LEN-stars);
+  document.getElementById('patterndone-title').textContent = stars===PATTERN_LEN ? 'Perfect, Shayan!' : 'Great job, Shayan!';
+  document.getElementById('patterndone-sub').textContent = `You found ${stars} out of ${PATTERN_LEN} patterns!`;
+  momoSay("You're a pattern pro!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('patterndone');
+}
+
+/* ================= memory match (shayan) ================= */
+const MEMORY_PAIRS = 6;
+let memoryState = {};
+function genMemoryCards(){
+  const colors = CAR_COLORS.slice(0, MEMORY_PAIRS);
+  let cards = [];
+  colors.forEach((c,i)=>{
+    cards.push({colorIdx:i, matched:false});
+    cards.push({colorIdx:i, matched:false});
+  });
+  return shuffle(cards);
+}
+function startMemory(){
+  memoryState = { cards: genMemoryCards(), flipped: [], matchedCount:0, locked:false };
+  momoSay("Find the matching cars!");
+  showScreen('memory');
+  renderMemoryBoard();
+}
+function renderMemoryBoard(){
+  document.getElementById('memory-label').textContent = `Pairs found: ${memoryState.matchedCount} of ${MEMORY_PAIRS}`;
+  const grid = document.getElementById('memory-grid');
+  grid.innerHTML = '';
+  memoryState.cards.forEach((card, idx)=>{
+    const b = document.createElement('button');
+    b.className = 'memory-card focusable';
+    const isUp = card.matched || memoryState.flipped.includes(idx);
+    if(isUp){
+      b.classList.add('flipped');
+      b.innerHTML = carSVG(CAR_COLORS[card.colorIdx].hex, 60);
+    }else{
+      b.innerHTML = '<span class="memory-back">?</span>';
+    }
+    if(card.matched) b.classList.add('matched');
+    b.addEventListener('click', ()=> flipMemoryCard(idx));
+    grid.appendChild(b);
+  });
+  refreshFocusables();
+}
+function flipMemoryCard(idx){
+  if(memoryState.locked) return;
+  const card = memoryState.cards[idx];
+  if(card.matched || memoryState.flipped.includes(idx)) return;
+  if(memoryState.flipped.length>=2) return;
+  memoryState.flipped.push(idx);
+  playSelect();
+  renderMemoryBoard();
+  if(memoryState.flipped.length===2){
+    memoryState.locked = true;
+    const [i1,i2] = memoryState.flipped;
+    const match = memoryState.cards[i1].colorIdx === memoryState.cards[i2].colorIdx;
+    setTimeout(()=>{
+      if(match){
+        memoryState.cards[i1].matched = true;
+        memoryState.cards[i2].matched = true;
+        memoryState.matchedCount++;
+        playCorrect(); confettiBurst();
+        momoSay(pick(["Great match!","You found it!","Woohoo!"]), 'happy');
+      }else{
+        playWrong();
+        momoSay(pick(["Try again!","Almost!","Keep looking!"]), 'oops');
+      }
+      memoryState.flipped = [];
+      memoryState.locked = false;
+      renderMemoryBoard();
+      if(memoryState.matchedCount>=MEMORY_PAIRS){
+        setTimeout(showMemoryDone, 700);
+      }
+    }, match ? 500 : 900);
+  }
+}
+function showMemoryDone(){
+  momoSay("You matched them all!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('memorydone');
+}
+
+/* ================= fun facts (sana) ================= */
+const FUN_FACTS_TOPICS = {
+  science: {name:'Science', icon:'🔬', facts:[
+    {emoji:'🦈', text:"Sharks are older than trees — they've been swimming in the ocean for over 400 million years!"},
+    {emoji:'🌈', text:"A rainbow appears when sunlight bends and splits inside raindrops."},
+    {emoji:'🐙', text:"An octopus has three hearts and blue blood!"},
+    {emoji:'❄️', text:"No two snowflakes are exactly the same shape."},
+    {emoji:'🍯', text:"Honey never spoils. Archaeologists have found pots of honey thousands of years old that were still good to eat!"},
+    {emoji:'⚡', text:"A bolt of lightning is hotter than the surface of the Sun."},
+    {emoji:'🦴', text:"Babies are born with about 300 bones, but adults only have 206 — some bones fuse together as you grow."},
+    {emoji:'🌋', text:"There are more volcanoes hiding under the ocean than there are on land."},
+    {emoji:'☁️', text:"A fluffy cloud can weigh more than a million pounds, even though it floats in the sky!"},
+    {emoji:'🧠', text:"Your brain uses about one-fifth of all the energy your whole body needs."}
+  ]},
+  technology: {name:'Technology', icon:'💻', facts:[
+    {emoji:'🖱️', text:"The very first computer mouse was carved out of wood!"},
+    {emoji:'📱', text:"There are more mobile phones in the world today than there are people!"},
+    {emoji:'🤖', text:"The word 'robot' comes from an old word meaning 'hard work'."},
+    {emoji:'🚀', text:"The phone in your pocket has more computing power than the computers that helped land astronauts on the Moon!"},
+    {emoji:'📷', text:"The very first photograph ever taken needed about 8 hours to capture one picture."},
+    {emoji:'🎮', text:"Some of the first video games were created way back in the 1950s."},
+    {emoji:'💾', text:"The first computer hard drive could only store a tiny bit of information — way less than a single photo today."},
+    {emoji:'🛰️', text:"There are thousands of satellites zooming around Earth right now, helping with maps, weather, and TV."},
+    {emoji:'⌨️', text:"The keyboard layout you use (QWERTY) was designed to slow typists down so old typewriters wouldn't jam!"},
+    {emoji:'📺', text:"The very first TV remote control was called 'Lazy Bones'."}
+  ]},
+  geography: {name:'Geography', icon:'🌍', facts:[
+    {emoji:'🗻', text:"Mount Everest is the tallest mountain above sea level on planet Earth."},
+    {emoji:'🌊', text:"The Pacific Ocean is so big it's larger than all the land on Earth put together."},
+    {emoji:'🏜️', text:"The Sahara Desert is almost as big as the entire United States!"},
+    {emoji:'🧊', text:"Antarctica is the coldest, windiest, and driest place on Earth."},
+    {emoji:'🌎', text:"Russia is so enormous that it stretches across 11 different time zones."},
+    {emoji:'🏝️', text:"Indonesia is a country made up of more than 17,000 islands."},
+    {emoji:'🌋', text:"Iceland has volcanoes, glaciers, and hot springs — all in one small country!"},
+    {emoji:'🌳', text:"The Amazon Rainforest makes about one-fifth of all the oxygen we breathe."},
+    {emoji:'🐫', text:"The Nile River flows through 11 different countries in Africa."},
+    {emoji:'⛪', text:"Vatican City is the smallest country in the whole world — you could walk across it in about 20 minutes!"}
+  ]},
+  animals: {name:'Animals', icon:'🦁', facts:[
+    {emoji:'🦒', text:"A giraffe's tongue can be up to 20 inches long — and it's dark blue-purple!"},
+    {emoji:'🐘', text:"Elephants are the only animals in the world that can't jump."},
+    {emoji:'🦋', text:"Butterflies taste with their feet instead of their tongues."},
+    {emoji:'🐧', text:"Some penguins 'propose' to their mates by giving them a special pebble."},
+    {emoji:'🦥', text:"Sloths can hold their breath longer than dolphins can!"},
+    {emoji:'🐨', text:"Koalas sleep up to 20 hours every single day."},
+    {emoji:'🦩', text:"Flamingos are actually born gray — they turn pink from the food they eat!"},
+    {emoji:'🦉', text:"Owls can turn their heads almost all the way around — about 270 degrees!"},
+    {emoji:'🐬', text:"Dolphins give each other special whistle 'names' to call one another."},
+    {emoji:'🐢', text:"Some turtles can breathe through their bottoms when they're underwater!"}
+  ]},
+  space: {name:'Space', icon:'🚀', facts:[
+    {emoji:'☀️', text:"The Sun is so enormous that about 1.3 million Earths could fit inside it."},
+    {emoji:'🪐', text:"Saturn is so light for its size that it would actually float in water!"},
+    {emoji:'🌙', text:"The Moon is slowly drifting away from Earth, just a tiny bit every year."},
+    {emoji:'♀️', text:"A day on Venus is longer than a whole year on Venus!"},
+    {emoji:'⭐', text:"There are more stars in space than there are grains of sand on every beach on Earth."},
+    {emoji:'🌋', text:"Mars has the biggest volcano in the whole solar system — it's called Olympus Mons."},
+    {emoji:'🌌', text:"Our galaxy, the Milky Way, has over 100 billion stars in it."},
+    {emoji:'☄️', text:"A shooting star isn't really a star — it's a tiny piece of rock burning up as it enters our sky."},
+    {emoji:'🔇', text:"Space is completely silent, because there's no air there to carry sound."},
+    {emoji:'🧑‍🚀', text:"Astronauts can grow up to 2 inches taller in space because there's no gravity pulling on their spine!"}
+  ]}
+};
+
+function startFacts(topic){
+  let facts;
+  if(topic==='random'){
+    let all = [];
+    Object.keys(FUN_FACTS_TOPICS).forEach(k=>{
+      FUN_FACTS_TOPICS[k].facts.forEach(f=> all.push({emoji:f.emoji, text:f.text, topicName:FUN_FACTS_TOPICS[k].name}));
+    });
+    facts = shuffle(all).slice(0,10);
+  }else{
+    facts = FUN_FACTS_TOPICS[topic].facts.map(f=>({emoji:f.emoji, text:f.text, topicName:FUN_FACTS_TOPICS[topic].name}));
+  }
+  factsState = { topic, facts, idx:0 };
+  momoSay("Let's learn something cool!");
+  showScreen('facts');
+  renderFactsCard();
+}
+function renderFactsCard(){
+  const f = factsState.facts[factsState.idx];
+  document.getElementById('facts-label').textContent = `${f.topicName} · Fact ${factsState.idx+1} of ${factsState.facts.length}`;
+  renderProgress('facts-progress', factsState.idx, factsState.facts.length);
+  document.getElementById('facts-emoji').textContent = f.emoji;
+  document.getElementById('facts-text').textContent = f.text;
+  refreshFocusables();
+}
+function nextFact(){
+  if(factsState.idx < factsState.facts.length-1){
+    factsState.idx++; playSelect(); renderFactsCard();
+  }else{
+    finishFacts();
+  }
+}
+function prevFact(){
+  if(factsState.idx > 0){
+    factsState.idx--; playSelect(); renderFactsCard();
+  }
+}
+function finishFacts(){
+  document.getElementById('factsdone-sub').textContent = `You just learned ${factsState.facts.length} fun facts!`;
+  playStar(); confettiBurst();
+  momoSay("You're so smart!", 'happy');
+  showScreen('factsdone');
+}
+
+/* ================= trivia pursuit (multi-stage quest) ================= */
+const QUEST_STAGE_LEN = 10;
+const QUEST_STAGE_NAMES = {math:'Math Quest', spelling:'Word Wizard', ramayana:'Ramayana Quiz', henry8:'Henry VIII Quiz'};
+const ACTIVITY_BREAKS = [
+  {icon:'🤸', text:"Do 10 jumping jacks!"},
+  {icon:'🌀', text:"Spin around 3 times!"},
+  {icon:'🐸', text:"Hop like a frog 10 times!"},
+  {icon:'🙆', text:"Stretch your arms up high and touch the sky!"},
+  {icon:'👐', text:"Clap your hands 10 times!"},
+  {icon:'🦵', text:"Do 5 squats!"},
+  {icon:'💃', text:"Do a silly dance for 10 seconds!"},
+  {icon:'🧘', text:"Touch your toes 5 times!"},
+  {icon:'🤗', text:"Give yourself a big hug!"},
+  {icon:'🦩', text:"Balance on one foot for 10 seconds!"}
+];
+let questState = {};
+let breakInterval = null;
+
+function startQuest(){
+  questState = {
+    stages: ['math','spelling','ramayana','henry8'],
+    stageIdx: 0, idx: 0, stars: 0, stageStars: 0,
+    mathQuestions: genMathQuestions(QUEST_STAGE_LEN),
+    spellWords: genSpellingRound(QUEST_STAGE_LEN),
+    ramQuestions: shuffle(RAMAYANA_QUESTIONS).slice(0, QUEST_STAGE_LEN),
+    henryQuestions: shuffle(HENRY8_QUESTIONS).slice(0, QUEST_STAGE_LEN),
+    locked:false
+  };
+  momoSay("Let's go on a quest!");
+  showScreen('quest');
+  renderQuestQuestion();
+}
+function renderQuestQuestion(){
+  const stage = questState.stages[questState.stageIdx];
+  document.getElementById('quest-label').textContent = `${QUEST_STAGE_NAMES[stage]} · Question ${questState.idx+1} of ${QUEST_STAGE_LEN}`;
+  renderProgress('quest-progress', questState.idx, QUEST_STAGE_LEN);
+  document.getElementById('quest-stars').textContent = questState.stageStars;
+  document.getElementById('quest-math-card').style.display = stage==='math' ? '' : 'none';
+  document.getElementById('quest-spell-card').style.display = stage==='spelling' ? '' : 'none';
+  document.getElementById('quest-ram-card').style.display = (stage==='ramayana' || stage==='henry8') ? '' : 'none';
+  if(stage==='math') renderQuestMath();
+  else if(stage==='spelling') renderQuestSpelling();
+  else renderQuestTrivia();
+  questState.locked = false;
+  refreshFocusables();
+}
+function renderQuestMath(){
+  const q = questState.mathQuestions[questState.idx];
+  document.getElementById('quest-equation').textContent = q.text;
+  const wrap = document.getElementById('quest-math-choices');
+  wrap.innerHTML = '';
+  q.options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn focusable';
+    b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#quest-math-choices .choice-btn').forEach(bb=>{
+        if(Number(bb.textContent)===q.answer) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      answerQuest(opt===q.answer);
+    });
+    wrap.appendChild(b);
+  });
+}
+function renderQuestSpelling(){
+  const w = questState.spellWords[questState.idx];
+  document.getElementById('quest-spell-emoji').textContent = w.emoji;
+  const slotsWrap = document.getElementById('quest-spell-slots');
+  slotsWrap.innerHTML = '';
+  w.word.split('').forEach((ch,i)=>{
+    const s = document.createElement('div');
+    s.className = 'slot' + (i===w.blankIdx?' blank':'');
+    s.textContent = i===w.blankIdx ? '_' : ch;
+    s.id = 'quest-slot-'+i;
+    slotsWrap.appendChild(s);
+  });
+  const lWrap = document.getElementById('quest-spell-letters');
+  lWrap.innerHTML = '';
+  w.options.forEach(letter=>{
+    const b = document.createElement('button');
+    b.className = 'letter-btn focusable';
+    b.textContent = letter;
+    b.addEventListener('click', ()=>{
+      const isCorrect = letter===w.correctLetter;
+      document.querySelectorAll('#quest-spell-letters .letter-btn').forEach(bb=>{
+        if(bb.textContent===w.correctLetter) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      if(isCorrect) document.getElementById('quest-slot-'+w.blankIdx).textContent = w.correctLetter;
+      answerQuest(isCorrect);
+    });
+    lWrap.appendChild(b);
+  });
+}
+function renderQuestTrivia(){
+  const stage = questState.stages[questState.stageIdx];
+  const pool = stage==='henry8' ? questState.henryQuestions : questState.ramQuestions;
+  const q = pool[questState.idx];
+  document.getElementById('quest-ram-emoji').textContent = q.emoji;
+  document.getElementById('quest-ram-question').textContent = q.q;
+  const opts = shuffle(q.options);
+  const wrap = document.getElementById('quest-ram-choices');
+  wrap.innerHTML = '';
+  opts.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className = 'choice-btn focusable';
+    b.textContent = opt;
+    b.addEventListener('click', ()=>{
+      document.querySelectorAll('#quest-ram-choices .choice-btn').forEach(bb=>{
+        if(bb.textContent===q.answer) bb.classList.add('correct');
+        else if(bb===b) bb.classList.add('wrong');
+      });
+      answerQuest(opt===q.answer);
+    });
+    wrap.appendChild(b);
+  });
+}
+function answerQuest(isCorrect){
+  if(questState.locked) return;
+  questState.locked = true;
+  if(isCorrect){
+    questState.stars++;
+    questState.stageStars++;
+    playCorrect(); confettiBurst();
+    momoSay(pick(["Yes!","Nice one!","Woohoo!","You got it!"]), 'happy');
+  }else{
+    playWrong();
+    momoSay(pick(["So close!","Nice try!","Keep going!"]), 'oops');
+  }
+  setTimeout(()=>{
+    if(currentScreen!=='quest') return;
+    questState.idx++;
+    if(questState.idx>=QUEST_STAGE_LEN) showStageDone();
+    else renderQuestQuestion();
+  }, 1100);
+}
+function showStageDone(){
+  const stage = questState.stages[questState.stageIdx];
+  document.getElementById('stagedone-stars').textContent = '⭐'.repeat(questState.stageStars) + '·'.repeat(QUEST_STAGE_LEN-questState.stageStars);
+  document.getElementById('stagedone-title').textContent = `${QUEST_STAGE_NAMES[stage]} Complete!`;
+  document.getElementById('stagedone-sub').textContent = `You got ${questState.stageStars} out of ${QUEST_STAGE_LEN} stars`;
+  const isLast = questState.stageIdx >= questState.stages.length-1;
+  document.getElementById('stagedone-next').textContent = isLast ? "Let's see your final score!" : `Up next: ${QUEST_STAGE_NAMES[questState.stages[questState.stageIdx+1]]}!`;
+  playStar(); confettiBurst();
+  showScreen('quest-stagedone');
+}
+function showActivityBreak(){
+  const act = pick(ACTIVITY_BREAKS);
+  document.getElementById('break-icon').textContent = act.icon;
+  document.getElementById('break-text').textContent = act.text;
+  showScreen('quest-break');
+  let n = 20;
+  document.getElementById('break-countdown').textContent = n;
+  if(breakInterval) clearInterval(breakInterval);
+  breakInterval = setInterval(()=>{
+    n--;
+    if(n>0){ document.getElementById('break-countdown').textContent = n; playSelect(); }
+    else{ clearInterval(breakInterval); breakInterval=null; document.getElementById('break-countdown').textContent = 'Great job!'; playStar(); }
+  }, 1000);
+}
+function showQuestFinal(){
+  const total = QUEST_STAGE_LEN * questState.stages.length;
+  document.getElementById('quest-final-sub').textContent = `You earned ${questState.stars} out of ${total} stars!`;
+  document.getElementById('quest-final-title').textContent = questState.stars===total ? "Perfect Quest!" : "Quest Complete!";
+  momoSay("What an adventure!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('quest-final');
+}
+
+/* ================= car match (shayan, ages 4+) ================= */
+const CAR_COLORS = [
+  {name:'Red', hex:'#FF6B5B'},
+  {name:'Blue', hex:'#4FB0FF'},
+  {name:'Yellow', hex:'#FFC93C'},
+  {name:'Green', hex:'#3DDC97'},
+  {name:'Purple', hex:'#B79CFF'},
+  {name:'Orange', hex:'#FF9F4A'}
+];
+const CAR_SHAPES = ['circle','square','triangle','star'];
+const CARMATCH_LEN = 9;
+let carMatchState = {};
+
+function carSVG(color, size){
+  size = size || 64;
+  return `<svg width="${size}" height="${size*0.62}" viewBox="0 0 100 62" xmlns="http://www.w3.org/2000/svg">
+    <path d="M25 24 L35 8 L65 8 L75 24 Z" fill="${color}"/>
+    <rect x="8" y="24" width="84" height="20" rx="9" fill="${color}"/>
+    <rect x="38" y="12" width="24" height="11" rx="2" fill="#180F33" opacity="0.45"/>
+    <circle cx="27" cy="46" r="9" fill="#180F33"/>
+    <circle cx="73" cy="46" r="9" fill="#180F33"/>
+    <circle cx="27" cy="46" r="3.4" fill="#B9AEE0"/>
+    <circle cx="73" cy="46" r="3.4" fill="#B9AEE0"/>
+  </svg>`;
+}
+function shapeSVG(shape, size){
+  size = size || 64;
+  const common = `width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"`;
+  if(shape==='circle') return `<svg ${common}><circle cx="50" cy="50" r="42" fill="#FF6B5B" stroke="#fff" stroke-width="5"/></svg>`;
+  if(shape==='square') return `<svg ${common}><rect x="12" y="12" width="76" height="76" rx="10" fill="#4FB0FF" stroke="#fff" stroke-width="5"/></svg>`;
+  if(shape==='triangle') return `<svg ${common}><polygon points="50,10 90,88 10,88" fill="#FFC93C" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg>`;
+  return `<svg ${common}><polygon points="50,6 61,38 95,38 68,58 78,90 50,70 22,90 32,58 5,38 39,38" fill="#3DDC97" stroke="#fff" stroke-width="5" stroke-linejoin="round"/></svg>`;
+}
+function genCarMatchRounds(){
+  const rounds = [];
+  for(let i=0;i<CARMATCH_LEN;i++){
+    const type = ['color','shape','number'][i%3];
+    if(type==='color'){
+      const opts = shuffle(CAR_COLORS).slice(0,4);
+      rounds.push({type, target:pick(opts), options:opts});
+    }else if(type==='shape'){
+      const opts = shuffle(CAR_SHAPES).slice(0,4);
+      rounds.push({type, target:pick(opts), options:opts});
+    }else{
+      const target = 1+Math.floor(Math.random()*5);
+      const optsSet = new Set([target]);
+      while(optsSet.size<4){ optsSet.add(1+Math.floor(Math.random()*5)); }
+      rounds.push({type, target, options:shuffle(Array.from(optsSet))});
+    }
+  }
+  return shuffle(rounds);
+}
+function startCarMatch(){
+  carMatchState = { rounds: genCarMatchRounds(), idx:0, stars:0, locked:false };
+  momoSay("Let's match some cars!");
+  showScreen('carmatch');
+  renderCarMatchRound();
+}
+function renderCarMatchRound(){
+  const r = carMatchState.rounds[carMatchState.idx];
+  document.getElementById('carmatch-label').textContent = `Round ${carMatchState.idx+1} of ${CARMATCH_LEN}`;
+  renderProgress('carmatch-progress', carMatchState.idx, CARMATCH_LEN);
+  const visual = document.getElementById('carmatch-prompt-visual');
+  const textEl = document.getElementById('carmatch-prompt-text');
+  const wrap = document.getElementById('carmatch-choices');
+  visual.innerHTML = '';
+  wrap.innerHTML = '';
+
+  if(r.type==='color'){
+    textEl.textContent = `Find the ${r.target.name} car!`;
+    visual.innerHTML = carSVG(r.target.hex, 90);
+    r.options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className = 'choice-btn carmatch-btn focusable';
+      b.innerHTML = carSVG(opt.hex, 68);
+      b.addEventListener('click', ()=> answerCarMatch(opt.name===r.target.name, b));
+      wrap.appendChild(b);
+    });
+  }else if(r.type==='shape'){
+    textEl.textContent = `Find the ${r.target}!`;
+    visual.innerHTML = shapeSVG(r.target, 90);
+    r.options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className = 'choice-btn carmatch-btn focusable';
+      b.innerHTML = shapeSVG(opt, 68);
+      b.addEventListener('click', ()=> answerCarMatch(opt===r.target, b));
+      wrap.appendChild(b);
+    });
+  }else{
+    textEl.textContent = 'How many cars?';
+    visual.innerHTML = Array.from({length:r.target}).map(()=>carSVG('#4FB0FF',34)).join('');
+    r.options.forEach(opt=>{
+      const b = document.createElement('button');
+      b.className = 'choice-btn focusable';
+      b.textContent = opt;
+      b.addEventListener('click', ()=> answerCarMatch(opt===r.target, b));
+      wrap.appendChild(b);
+    });
+  }
+  carMatchState.locked = false;
+  refreshFocusables();
+}
+function answerCarMatch(isCorrect, btnEl){
+  if(carMatchState.locked) return;
+  carMatchState.locked = true;
+  btnEl.classList.add(isCorrect ? 'correct' : 'wrong');
+  if(isCorrect){
+    carMatchState.stars++;
+    playCorrect(); confettiBurst();
+    momoSay(pick(["Yes!","Great job, Shayan!","You got it!","Woohoo!"]), 'happy');
+  }else{
+    playWrong();
+    momoSay(pick(["Nice try!","Almost!","Keep going!"]), 'oops');
+  }
+  setTimeout(()=>{
+    if(currentScreen!=='carmatch') return;
+    carMatchState.idx++;
+    if(carMatchState.idx>=CARMATCH_LEN) showCarMatchDone();
+    else renderCarMatchRound();
+  }, 1000);
+}
+function showCarMatchDone(){
+  const stars = carMatchState.stars;
+  document.getElementById('carmatchdone-stars').textContent = '⭐'.repeat(stars) + '·'.repeat(CARMATCH_LEN-stars);
+  document.getElementById('carmatchdone-title').textContent = stars===CARMATCH_LEN ? 'Perfect, Shayan!' : 'Great job, Shayan!';
+  document.getElementById('carmatchdone-sub').textContent = `You matched ${stars} out of ${CARMATCH_LEN}!`;
+  momoSay("You're a car matching champ!", 'happy');
+  playStar(); confettiBurst();
+  showScreen('carmatchdone');
+}
+
+/* ================= book quiz (sana) ================= */
+const BOOK_QUIZZES = {
+  matilda: {
+    title: "Matilda", author: "Roald Dahl", icon: '📖',
+    questions: [
+      {q:"Who is the main character of the story?", options:["Matilda","Sophie","Charlie","Sana"], answer:"Matilda"},
+      {q:"What is Matilda's last name?", options:["Wormwood","Honey","Trunchbull","Phelps"], answer:"Wormwood"},
+      {q:"What amazing power does Matilda discover she has?", options:["Moving things with her mind","Flying","Turning invisible","Talking to animals"], answer:"Moving things with her mind"},
+      {q:"What is the name of Matilda's kind and gentle teacher?", options:["Miss Honey","Miss Trunchbull","Mrs. Phelps","Miss Wormwood"], answer:"Miss Honey"},
+      {q:"What is the name of the scary headmistress of the school?", options:["Miss Trunchbull","Miss Honey","Mrs. Wormwood","Mrs. Phelps"], answer:"Miss Trunchbull"},
+      {q:"What does Matilda's family mostly do every evening instead of spending time with her?", options:["Watch television","Read books together","Play games","Go for walks"], answer:"Watch television"},
+      {q:"What is Matilda's father's job?", options:["Selling used cars","A doctor","A teacher","A farmer"], answer:"Selling used cars"},
+      {q:"What is the name of Miss Trunchbull's scary punishment closet?", options:["The Chokey","The Dungeon","The Box","The Cage"], answer:"The Chokey"},
+      {q:"Where did young Matilda love to spend her afternoons?", options:["The library","The playground","The garden","The cinema"], answer:"The library"},
+      {q:"How old is Matilda at the start of the story?", options:["5","8","10","12"], answer:"5"},
+      {q:"What is the librarian's name who helps Matilda find books?", options:["Mrs. Phelps","Miss Honey","Mrs. Wormwood","Miss Trunchbull"], answer:"Mrs. Phelps"},
+      {q:"What food was Bruce Bogtrotter forced to eat as punishment?", options:["A giant chocolate cake","A plate of worms","Cold porridge","A whole lemon"], answer:"A giant chocolate cake"},
+      {q:"Why was Bruce Bogtrotter punished?", options:["He ate a slice of Miss Trunchbull's cake","He broke a window","He was late for school","He lost a book"], answer:"He ate a slice of Miss Trunchbull's cake"},
+      {q:"What sport did Miss Trunchbull used to compete in?", options:["Hammer throwing","Swimming","Tennis","Running"], answer:"Hammer throwing"},
+      {q:"What is Miss Trunchbull's relationship to Miss Honey?", options:["She is Miss Honey's aunt","She is Miss Honey's sister","She is Miss Honey's mother","They are not related"], answer:"She is Miss Honey's aunt"},
+      {q:"Who wrote the book Matilda?", options:["Roald Dahl","J.K. Rowling","Dr. Seuss","C.S. Lewis"], answer:"Roald Dahl"},
+      {q:"What does Matilda use her special power to do to help Miss Honey?", options:["Scare Miss Trunchbull away","Build her a new house","Find her a job","Write her a letter"], answer:"Scare Miss Trunchbull away"},
+      {q:"Where does Matilda end up living at the end of the story?", options:["With Miss Honey","With her parents","With Mrs. Phelps","At the school"], answer:"With Miss Honey"},
+      {q:"Why do Matilda's parents leave the country?", options:["Her father gets in trouble with the police","They win the lottery","They get new jobs","They want an adventure"], answer:"Her father gets in trouble with the police"},
+      {q:"What does Matilda enjoy doing more than anything else?", options:["Reading books","Watching TV","Playing sports","Baking"], answer:"Reading books"}
+    ]
+  },
+  george: {
+    title: "George's Marvellous Medicine", author: "Roald Dahl", icon: '🧪',
+    questions: [
+      {q:"Who is the main character of the story?", options:["George","Charlie","James","Danny"], answer:"George"},
+      {q:"What is George's last name?", options:["Kranky","Wormwood","Bucket","Trotter"], answer:"Kranky"},
+      {q:"What does George decide to make?", options:["A magic medicine","A birthday cake","A treehouse","A go-kart"], answer:"A magic medicine"},
+      {q:"Who is George making the medicine for?", options:["His grumpy grandmother","His little sister","His teacher","His dog"], answer:"His grumpy grandmother"},
+      {q:"Why does George want to give his grandmother a special medicine?", options:["Because she is mean and grumpy to him","Because she is sick","Because it's her birthday","Because she asked for it"], answer:"Because she is mean and grumpy to him"},
+      {q:"What happens to Grandma after she drinks George's medicine?", options:["She grows incredibly tall","She falls asleep","She turns purple","She starts singing"], answer:"She grows incredibly tall"},
+      {q:"Where does George mix the medicine?", options:["In a big saucepan in the kitchen","In a bathtub","In a bucket outside","In a teapot"], answer:"In a big saucepan in the kitchen"},
+      {q:"What does George use to stir the medicine?", options:["A wooden spoon","A stick","His hands","A whisk"], answer:"A wooden spoon"},
+      {q:"What happens because Grandma grows so tall?", options:["The roof of the house has to come off","She has to move to a new house","She gets a new bed","She joins the circus"], answer:"The roof of the house has to come off"},
+      {q:"What does George's father want to do once he sees what the medicine did?", options:["Sell it and make lots of money","Throw it away","Give it to the doctor","Keep it a secret forever"], answer:"Sell it and make lots of money"},
+      {q:"What happens to the farm animals that drink a later batch of medicine?", options:["They grow gigantic too","They fall asleep","They run away","They start talking"], answer:"They grow gigantic too"},
+      {q:"What happens when George tries to make the medicine exactly the same way again?", options:["It never turns out the same way twice","It works perfectly every time","It turns to water","It explodes"], answer:"It never turns out the same way twice"},
+      {q:"What eventually happens to Grandma after she drinks a shrinking batch of medicine?", options:["She shrinks smaller and smaller until she disappears","She turns back to normal","She grows even taller","She falls asleep forever"], answer:"She shrinks smaller and smaller until she disappears"},
+      {q:"Who wrote George's Marvellous Medicine?", options:["Roald Dahl","J.K. Rowling","Dr. Seuss","Julia Donaldson"], answer:"Roald Dahl"},
+      {q:"What does George's family own and work on?", options:["A farm","A bakery","A toy shop","A zoo"], answer:"A farm"},
+      {q:"Who does George's mother leave in charge of Grandma at the start of the story?", options:["George","His father","A neighbor","No one"], answer:"George"},
+      {q:"How does Grandma usually treat George?", options:["She is unkind and always complaining","She is sweet and gentle","She ignores him completely","She plays games with him"], answer:"She is unkind and always complaining"},
+      {q:"What does George put into the medicine besides household products?", options:["Things from the bathroom, garage, and garden","Only fruit","Only spices","Only water"], answer:"Things from the bathroom, garage, and garden"},
+      {q:"What is the title of this book?", options:["George's Marvellous Medicine","George's Magic Potion","George and the Giant Peach","George's Big Adventure"], answer:"George's Marvellous Medicine"},
+      {q:"Which author is famous for writing both this book and Matilda?", options:["Roald Dahl","J.K. Rowling","Dr. Seuss","C.S. Lewis"], answer:"Roald Dahl"}
+    ]
+  }
+};
+
+function renderBookSelect(){
+  const grid = document.getElementById('book-select-grid');
+  grid.innerHTML = '';
+  Object.keys(BOOK_QUIZZES).forEach(key=>{
+    const book = BOOK_QUIZZES[key];
+    const tile = document.createElement('div');
+    tile.className = 'tile focusable';
+    tile.dataset.action = 'pick-book';
+    tile.dataset.book = key;
+    tile.innerHTML = `<span class="icon">${book.icon}</span><h2>${book.title}</h2><p class="tag">📖 by ${book.author}</p>`;
+    grid.appendChild(tile);
+  });
+  refreshFocusables();
+}
+/* ================= racing game ================= */
+function enterRacing(){
+  showScreen('racing');
+  initRace();
+}
+function initRace(){
+  if(raceRAF) cancelAnimationFrame(raceRAF);
+  const canvas = document.getElementById('raceCanvas');
+  canvas.width = 960; canvas.height = 540;
+  raceState = {
+    canvas, ctx: canvas.getContext('2d'),
+    lane:0, targetLane:0,
+    distance:0, coins:0,
+    speed:0, maxSpeed:130,
+    obstacles:[], coinsList:[],
+    paused:false, bump:0
+  };
+  spawnRaceItems();
+  document.getElementById('race-coins').textContent = '0';
+  document.getElementById('pauseOverlay').classList.remove('show');
+  runCountdown(()=>{ raceState.speed = raceState.maxSpeed; });
+  let last = performance.now();
+  function loop(now){
+    const dt = Math.min(0.05, (now-last)/1000); last = now;
+    if(!raceState.paused) updateRace(dt);
+    drawRace();
+    raceRAF = requestAnimationFrame(loop);
+  }
+  raceRAF = requestAnimationFrame(loop);
+}
+function spawnRaceItems(){
+  raceState.obstacles = Array.from({length:2}, (_,i)=>({
+    p: 0.3 + i*0.45,
+    lane: [-1,0,1][Math.floor(Math.random()*3)],
+    color: pick(['#FF6B5B','#3DDC97','#B79CFF'])
+  }));
+  raceState.coinsList = Array.from({length:8}, (_,i)=>({
+    p: 0.05 + i*0.12,
+    lane: [-1,0,1][Math.floor(Math.random()*3)],
+    collected:false
+  }));
+}
+function runCountdown(done){
+  const el = document.getElementById('countdownOverlay');
+  const txt = document.getElementById('countdownText');
+  el.classList.add('show');
+  let n = 3;
+  txt.textContent = n;
+  playSelect();
+  const iv = setInterval(()=>{
+    n--;
+    if(n>0){ txt.textContent = n; playSelect(); }
+    else if(n===0){ txt.textContent = 'GO SHAYAN!'; playStar(); }
+    else{ clearInterval(iv); el.classList.remove('show'); done(); }
+  }, 700);
+}
+function updateRace(dt){
+  raceState.lane += (raceState.targetLane - raceState.lane) * Math.min(1, dt*5);
+  raceState.bump = Math.max(0, raceState.bump - dt);
+  const travel = raceState.speed * dt;
+  raceState.distance += travel;
+  const worldLen = 340;
+  raceState.obstacles.forEach(o=>{
+    o.p += travel/worldLen;
+    if(o.p>=1){
+      const laneBucket = Math.round(raceState.lane);
+      if(o.lane===laneBucket) triggerBump();
+      o.p = 0; o.lane = [-1,0,1][Math.floor(Math.random()*3)];
+      o.color = pick(['#FF6B5B','#3DDC97','#B79CFF']);
+    }
+  });
+  raceState.coinsList.forEach(c=>{
+    if(c.collected) return;
+    c.p += travel/worldLen;
+    const laneBucket = Math.round(raceState.lane);
+    if(c.p>=0.6 && c.p<1 && c.lane===laneBucket){
+      c.collected = true;
+      raceState.coins++;
+      document.getElementById('race-coins').textContent = raceState.coins;
+      tone(1046.5,.1,'sine'); tone(1318.5,.12,'sine',.06);
+      raceToast(pick(["Nice one, Shayan!","Woohoo!","Zoom zoom!","+1 coin!"]));
+      setTimeout(()=>{ c.p=0; c.collected=false; c.lane=[-1,0,1][Math.floor(Math.random()*3)]; }, 300);
+    }else if(c.p>=1){
+      c.p = 0; c.lane = [-1,0,1][Math.floor(Math.random()*3)];
+    }
+  });
+}
+function triggerBump(){
+  raceState.bump = 0.5;
+  tone(392,.14,'triangle'); tone(330,.14,'triangle',.08);
+  raceToast(pick(["Beep beep!","Whoopsie!","Silly car!"]));
+  const container = document.getElementById('screen-racing');
+  container.classList.remove('shake'); void container.offsetWidth; container.classList.add('shake');
+}
+function pauseRace(){
+  if(!raceState) return;
+  raceState.paused = true;
+  document.getElementById('pauseOverlay').classList.add('show');
+  focusables = Array.from(document.querySelectorAll('#pauseOverlay .focusable'));
+  focusIndex = 0; applyFocus();
+}
+function resumeRace(){
+  raceState.paused = false;
+  document.getElementById('pauseOverlay').classList.remove('show');
+}
+let raceToastTimer;
+function raceToast(msg){
+  const el = document.getElementById('raceToast');
+  if(!el) return;
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(raceToastTimer);
+  raceToastTimer = setTimeout(()=>el.classList.remove('show'), 1200);
+}
+
+let raceHoldInterval = null;
+function bindRaceControls(){
+  const leftBtn = document.getElementById('raceLeftBtn');
+  const rightBtn = document.getElementById('raceRightBtn');
+  if(!leftBtn || !rightBtn) return;
+  const steer = (dir)=>{
+    if(!raceState || raceState.paused) return;
+    raceState.targetLane = dir<0 ? Math.max(-1, raceState.targetLane-0.5) : Math.min(1, raceState.targetLane+0.5);
+  };
+  const startHold = (dir)=>{
+    steer(dir);
+    clearInterval(raceHoldInterval);
+    raceHoldInterval = setInterval(()=>steer(dir), 220);
+  };
+  const stopHold = ()=>{ clearInterval(raceHoldInterval); raceHoldInterval=null; };
+  [[leftBtn,-1],[rightBtn,1]].forEach(([btn,dir])=>{
+    btn.addEventListener('pointerdown', (e)=>{ e.preventDefault(); startHold(dir); });
+    btn.addEventListener('pointerup', stopHold);
+    btn.addEventListener('pointerleave', stopHold);
+    btn.addEventListener('pointercancel', stopHold);
+  });
+}
+bindRaceControls();
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
+}
+function drawSpriteCar(ctx,x,y,scale,color){
+  const cw=70*scale, ch=40*scale;
+  ctx.fillStyle=color;
+  roundRect(ctx,x-cw/2,y-ch,cw,ch,8*scale); ctx.fill();
+  ctx.fillStyle='#241452';
+  ctx.fillRect(x-cw/2,y-6*scale,cw,6*scale);
+}
+function drawCoin(ctx,x,y,scale){
+  ctx.fillStyle='#FFC93C';
+  ctx.beginPath(); ctx.arc(x,y-10*scale,10*scale,0,Math.PI*2); ctx.fill();
+  ctx.strokeStyle='#B8860B'; ctx.lineWidth=Math.max(1,2*scale);
+  ctx.beginPath(); ctx.arc(x,y-10*scale,10*scale,0,Math.PI*2); ctx.stroke();
+}
+function drawPlayerCar(ctx,x,y,scale){
+  const cw=104*scale, ch=46*scale;
+  ctx.save();
+  ctx.translate(x,y);
+  ctx.fillStyle='#241452';
+  ctx.fillRect(-cw*0.42,-ch*1.02,cw*0.84,ch*0.12);
+  ctx.fillRect(-cw*0.36,-ch*0.92,cw*0.08,ch*0.14);
+  ctx.fillRect(cw*0.28,-ch*0.92,cw*0.08,ch*0.14);
+  ctx.fillStyle='#FFD400';
+  ctx.beginPath();
+  ctx.moveTo(-cw*0.48, 0);
+  ctx.lineTo(-cw*0.44, -ch*0.55);
+  ctx.lineTo(-cw*0.22, -ch*0.82);
+  ctx.lineTo(cw*0.18, -ch*0.82);
+  ctx.lineTo(cw*0.46, -ch*0.5);
+  ctx.lineTo(cw*0.5, 0);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle='#180F33';
+  ctx.beginPath();
+  ctx.moveTo(-cw*0.16, -ch*0.8);
+  ctx.lineTo(cw*0.02, -ch*0.98);
+  ctx.lineTo(cw*0.2, -ch*0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle='#180F33';
+  ctx.fillRect(-cw*0.3,-ch*0.42,cw*0.6,ch*0.08);
+  ctx.fillStyle='#FFF8ED';
+  ctx.fillRect(-cw*0.47,-ch*0.5,cw*0.07,ch*0.14);
+  ctx.fillRect(cw*0.4,-ch*0.5,cw*0.07,ch*0.14);
+  ctx.restore();
+}
+function drawRace(){
+  const {ctx,canvas} = raceState;
+  const w = canvas.width, h = canvas.height;
+  const horizon = h*0.38;
+
+  const skyGrad = ctx.createLinearGradient(0,0,0,horizon);
+  skyGrad.addColorStop(0,'#6EC6FF'); skyGrad.addColorStop(1,'#BDEBFF');
+  ctx.fillStyle = skyGrad; ctx.fillRect(0,0,w,horizon);
+
+  ctx.fillStyle = '#FFE066';
+  ctx.beginPath(); ctx.arc(w*0.8, horizon*0.4, h*0.06, 0, Math.PI*2); ctx.fill();
+
+  ctx.fillStyle = '#8FD19E';
+  ctx.beginPath();
+  ctx.moveTo(0,horizon);
+  ctx.quadraticCurveTo(w*0.25, horizon-h*0.08, w*0.5, horizon);
+  ctx.quadraticCurveTo(w*0.75, horizon+h*0.05, w, horizon-h*0.03);
+  ctx.lineTo(w,horizon); ctx.closePath(); ctx.fill();
+
+  const curve = Math.sin(raceState.distance*0.0009)*0.4;
+  const offset = raceState.distance*0.6;
+
+  for(let y=horizon; y<h; y+=2){
+    const p = (y-horizon)/(h-horizon);
+    const persp = p*p;
+    if(persp*w < 4) continue;
+    const roadWidth = persp*w*1.3;
+    const laneCurve = curve*Math.pow(1-p,2)*w*0.6;
+    const centerX = w/2 + laneCurve;
+    const stripe = Math.floor((y*0.5+offset))%20<10;
+    ctx.fillStyle = stripe? '#5FA85B':'#6FBB6A';
+    ctx.fillRect(0,y,w,2);
+    ctx.fillStyle = '#3B3550';
+    ctx.fillRect(centerX-roadWidth/2,y,roadWidth,2);
+    const rumbleW = Math.max(2,roadWidth*0.06);
+    ctx.fillStyle = stripe? '#FF6B5B':'#FFF8ED';
+    ctx.fillRect(centerX-roadWidth/2,y,rumbleW,2);
+    ctx.fillRect(centerX+roadWidth/2-rumbleW,y,rumbleW,2);
+    if(roadWidth>30 && !stripe){
+      const lineW = Math.max(2,roadWidth*0.025);
+      ctx.fillStyle='#FFC93C';
+      ctx.fillRect(centerX-lineW/2,y,lineW,2);
+    }
+  }
+
+  const items = [
+    ...raceState.obstacles.map(o=>({...o,type:'car'})),
+    ...raceState.coinsList.filter(c=>!c.collected).map(c=>({...c,type:'coin'}))
+  ].sort((a,b)=>a.p-b.p);
+
+  items.forEach(it=>{
+    const p = Math.min(0.98, Math.max(0.01,it.p));
+    const y = horizon + p*p*(h-horizon);
+    const persp = p*p;
+    const roadWidth = persp*w*1.3;
+    const laneCurve = curve*Math.pow(1-p,2)*w*0.6;
+    const centerX = w/2 + laneCurve;
+    const x = centerX + it.lane*(roadWidth*0.28);
+    const scale = Math.max(0.06, persp);
+    if(it.type==='car') drawSpriteCar(ctx,x,y,scale,it.color);
+    else drawCoin(ctx,x,y,scale);
+  });
+
+  const px = w/2 + raceState.lane*(w*0.16);
+  drawPlayerCar(ctx, px, h-h*0.10, 1);
+}
+</script>
+</body>
+</html>
